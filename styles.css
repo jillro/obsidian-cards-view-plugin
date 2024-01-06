@@ -1,68 +1,17 @@
 /**
- * Folder list
- */
-
-.folder-cards {
-	position: relative;
-	height: auto;
-	container-type: inline-size;
-}
-
-.folder-cards .card {
-	background-color: var(--background-primary-alt);
-	border: 1px solid var(--background-modifier-border);
-	width: calc(50% - 10px);
-	margin: 0 0 20px;
-	padding: 10px;
-	display: flex;
-	flex-direction: row;
-	align-items: center;
-	gap: 10px;
-}
-
-@container (min-width: 768px) {
-	.folder-cards .card {
-		width: calc(33.33% - 14px);
-	}
-}
-
-@container (min-width: 1024px) {
-	.folder-cards .card {
-		width: calc(25% - 16px);
-	}
-}
-
-.folder-cards .card .icon-closed {
-	display: inline-block;
-	width: 24px;
-}
-
-.folder-cards .card .icon-open {
-	display: none;
-}
-
-.folder-cards .card:hover .icon-open {
-	display: inline-block;
-	width: 24px;
-}
-
-.folder-cards .card:hover .icon-closed {
-	display: none;
-}
-
-/**
  * Summary cards
  */
 
 .summary-cards {
 	position: relative;
 	container-type: inline-size;
+	--card-padding: 10px;
 }
 
 .summary-cards .card {
 	background-color: var(--background-primary-alt);
 	border: 1px solid var(--background-modifier-border);
-	padding: 10px;
+	padding: var(--card-padding);
 	word-wrap: break-word;
 	overflow-y: hidden;
 	width: calc(50% - 10px);
@@ -106,4 +55,26 @@
 
 .summary-cards .card h3 {
 	word-wrap: break-word;
+}
+
+.summary-cards .card .card-info {
+	margin: calc(-1 * var(--card-padding));
+	margin-top: 0;
+	border-top: 1px solid var(--background-modifier-border);
+	padding: calc(0.5 * var(--card-padding)) var(--card-padding);
+	background-color: #fff;
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	justify-content: end;
+	gap: 5px;
+}
+
+.summary-cards .card .card-info .folder-name {
+	flex-grow: 1;
+}
+
+.summary-cards .card .card-info button {
+	border: none;
+	box-shadow: none;
 }
