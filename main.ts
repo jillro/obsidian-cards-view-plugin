@@ -56,41 +56,24 @@ class SummaryCardsView extends ItemView {
 	}
 
 	async loadFolder(folder: TFolder) {
-		this.folderContainer.empty();
 		this.cardContainer.empty();
-		const files = folder.children;
 
-		// Add parent folder
-		if (!folder.isRoot()) {
-			const div = this.folderContainer.createEl('div', { cls: 'card' });
-			setIcon(div.createEl('span', { cls: 'icon-closed' }), 'folder-closed');
-			setIcon(div.createEl('span', { cls: 'icon-open' }), 'folder-open');
-			div.createEl('span', {text: '..' });
-			div.addEventListener('click', () => {
-				this.loadFolder(folder.parent);
+		// Get all notes recursively in a flat array
+		const notes: TFile[] = [];
+		const getNotes = (folder: TFolder) => {
+			folder.children.forEach((file) => {
+				if (file instanceof TFolder) {
+					getNotes(file);
+				} else if (file instanceof TFile && file.extension === 'md') {
+					notes.push(file);
+				}
 			});
-			this.folderContainer.appendChild(div);
-		}
+		};
+		getNotes(folder);
 
-		// Add folders
-		files.filter(
-			f => f instanceof TFolder
-		).map((file: TFolder) => {
-			const div = this.folderContainer.createEl('div', { cls: 'card' });
-			setIcon(div.createEl('span', { cls: 'icon-closed' }), 'folder-closed');
-			setIcon(div.createEl('span', { cls: 'icon-open' }), 'folder-open');
-			div.createEl('span', {text: file.name });
-			div.addEventListener('click', () => {
-				this.loadFolder(file);
-			});
-			this.folderContainer.appendChild(div);
-			return div;
-		});
 
 		// Add notes
-		await Promise.all(files.filter(
-			f => f instanceof TFile && f.extension === 'md'
-		).sort(
+		await Promise.all(notes.sort(
 			(a: TFile, b :TFile) => b.stat.mtime - a.stat.mtime
 		).map(async (file: TFile) => {
 			const content = (await this.app.vault.cachedRead(file));
@@ -109,15 +92,6 @@ class SummaryCardsView extends ItemView {
 		}));
 
 		setImmediate(() => {
-			const foldersGrid: Masonry = new Masonry(this.folderContainer, {
-				itemSelector: '.card',
-				gutter: 20,
-				transitionDuration: 0,
-				containerStyle: {
-					width: '100%',
-				}
-			});
-
 			const notesGrid: Masonry = new Masonry(this.cardContainer, {
 				itemSelector: '.card',
 				gutter: 20,
@@ -134,15 +108,12 @@ class SummaryCardsView extends ItemView {
 				// @ts-ignore
 				notesGrid.layout();
 			});
-			observer.observe(this.folderContainer);
+			observer.observe(this.cardContainer);
 		});
 	}
 
 	async onOpen() {
 		const viewContent = this.containerEl.children[1];
-		this.folderContainer = viewContent.createEl('div');
-		this.folderContainer.className += 'folder-cards';
-		viewContent.createEl('hr');
 		this.cardContainer = viewContent.createEl('div');
 		this.cardContainer.className += 'summary-cards';
 
