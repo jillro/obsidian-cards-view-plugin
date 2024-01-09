@@ -2,13 +2,13 @@
  * Summary cards
  */
 
-.summary-cards {
+.cards-view-plugin {
 	position: relative;
 	container-type: inline-size;
 	--card-padding: 10px;
 }
 
-.summary-cards .card {
+.cards-view-plugin .card {
 	background-color: var(--background-primary-alt);
 	border: 1px solid var(--background-modifier-border);
 	padding: var(--card-padding);
@@ -18,46 +18,46 @@
 	margin: 0 0 20px;
 }
 
-.summary-cards .card {
+.cards-view-plugin .card {
 	font-size: 0.8rem;
 }
 
-.summary-cards .card p,
-.summary-cards .card ul {
+.cards-view-plugin .card p,
+.cards-view-plugin .card ul {
 	margin: 0.3rem 0;
 }
 
-.summary-cards .card h1,
-.summary-cards .card h2,
-.summary-cards .card h3 {
+.cards-view-plugin .card h1,
+.cards-view-plugin .card h2,
+.cards-view-plugin .card h3 {
 	margin: 0 0 0.3rem;
 }
 
-.summary-cards .card ul {
+.cards-view-plugin .card ul {
 	padding-left: 20px;
 }
 
 @container (min-width: 768px) {
-	.summary-cards .card {
+	.cards-view-plugin .card {
 		width: calc(33.33% - 14px);
 	}
 }
 
 @container (min-width: 1024px) {
-	.summary-cards .card {
+	.cards-view-plugin .card {
 		width: calc(25% - 16px);
 	}
 }
 
-.summary-cards .card:hover {
+.cards-view-plugin .card:hover {
 	border-color: var(--background-modifier-border-hover);
 }
 
-.summary-cards .card h3 {
+.cards-view-plugin .card h3 {
 	word-wrap: break-word;
 }
 
-.summary-cards .card .card-info {
+.cards-view-plugin .card .card-info {
 	margin: calc(-1 * var(--card-padding));
 	margin-top: 0;
 	border-top: 1px solid var(--background-modifier-border);
@@ -70,11 +70,11 @@
 	gap: 5px;
 }
 
-.summary-cards .card .card-info .folder-name {
+.cards-view-plugin .card .card-info .folder-name {
 	flex-grow: 1;
 }
 
-.summary-cards .card .card-info button {
+.cards-view-plugin .card .card-info button {
 	border: none;
 	box-shadow: none;
 }

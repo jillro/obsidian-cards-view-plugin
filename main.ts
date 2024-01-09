@@ -1,23 +1,23 @@
 import {ItemView, MarkdownRenderer, Plugin, setIcon, TAbstractFile, TFile, TFolder, WorkspaceLeaf} from 'obsidian';
 import Masonry from 'masonry-layout';
 
-const VIEW_TYPE = 'summary-cards';
+const VIEW_TYPE = 'cards-view-plugin';
 
-export default class SummaryCards extends Plugin {
+export default class CardsViewPlugin extends Plugin {
 	async onload() {
 		this.addRibbonIcon('align-start-horizontal', 'Card explorer', () => {
 			this.activateView();
 		});
 
 		this.addCommand({
-			id: "summary-cards",
+			id: "cards-view-plugin",
 			name: "Open card explorer",
 			callback: () => {
 				this.activateView();
 			},
 		});
 
-		this.registerView(VIEW_TYPE, (leaf) => new SummaryCardsView(leaf));
+		this.registerView(VIEW_TYPE, (leaf) => new CardsViewPluginView(leaf));
 	}
 
 	onunload() {
@@ -27,7 +27,7 @@ export default class SummaryCards extends Plugin {
 	async activateView() {
 		const { workspace } = this.app;
 
-		let leaf: WorkspaceLeaf | null = null;
+		let leaf: WorkspaceLeaf | null;
 		const leaves = workspace.getLeavesOfType(VIEW_TYPE);
 
 		if (leaves.length) {
@@ -39,7 +39,7 @@ export default class SummaryCards extends Plugin {
 	}
 }
 
-class SummaryCardsView extends ItemView {
+class CardsViewPluginView extends ItemView {
 	private cardContainer: HTMLElement;
 	private notesGrid: Masonry;
 	private nextCardIndex = 0;
@@ -138,7 +138,7 @@ class SummaryCardsView extends ItemView {
 	async onOpen() {
 		const viewContent = this.containerEl.children[1];
 		this.cardContainer = viewContent.createEl('div');
-		this.cardContainer.className += 'summary-cards';
+		this.cardContainer.className += 'cards-view-plugin';
 		this.notesGrid = new Masonry(this.cardContainer, {
 			itemSelector: '.card',
 			gutter: 20,
@@ -158,6 +158,7 @@ class SummaryCardsView extends ItemView {
 			if (file.extension === 'md') {
 				await this.addCard(file, true);
 				this.notesGrid?.layout?.();
+				this.nextCardIndex++;
 			}
 		})
 		this.app.vault.on('delete', async (file: TAbstractFile) => {
@@ -165,6 +166,7 @@ class SummaryCardsView extends ItemView {
 				const element = document.getElementsByClassName(await this.getFileStringId(file))[0];
 				this.notesGrid?.remove?.([element]);
 				this.notesGrid?.layout?.();
+				this.nextCardIndex--;
 			}
 		})
 
