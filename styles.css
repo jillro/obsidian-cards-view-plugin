@@ -62,7 +62,7 @@
 	margin-top: 0;
 	border-top: 1px solid var(--background-modifier-border);
 	padding: calc(0.5 * var(--card-padding)) var(--card-padding);
-	background-color: #fff;
+	background-color: var(--background-primary);
 	display: flex;
 	flex-direction: row;
 	align-items: center;
