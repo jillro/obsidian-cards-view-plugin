@@ -5,7 +5,8 @@
 .cards-view-plugin {
 	position: relative;
 	container-type: inline-size;
-	--card-padding: 10px;
+	--card-padding: var(--size-4-3);
+	--card-gutter: var(--size-4-5);
 }
 
 .cards-view-plugin .card {
@@ -14,8 +15,8 @@
 	padding: var(--card-padding);
 	word-wrap: break-word;
 	overflow-y: hidden;
-	width: calc(50% - 10px);
-	margin: 0 0 20px;
+	width: calc((100% - var(--card-gutter)) / 2);
+	margin: 0 0 var(--card-gutter);
 }
 
 .cards-view-plugin .card {
@@ -34,18 +35,18 @@
 }
 
 .cards-view-plugin .card ul {
-	padding-left: 20px;
+	padding-left: var(--size-4-5);
 }
 
 @container (min-width: 768px) {
 	.cards-view-plugin .card {
-		width: calc(33.33% - 14px);
+		width: calc((100% - var(--card-gutter)*2) / 3);
 	}
 }
 
 @container (min-width: 1024px) {
 	.cards-view-plugin .card {
-		width: calc(25% - 16px);
+		width: calc((100% - var(--card-gutter)*3) / 4);
 	}
 }
 
@@ -61,20 +62,15 @@
 	margin: calc(-1 * var(--card-padding));
 	margin-top: 0;
 	border-top: 1px solid var(--background-modifier-border);
-	padding: calc(0.5 * var(--card-padding)) var(--card-padding);
+	padding: var(--size-4-1) var(--card-padding);
 	background-color: var(--background-primary);
 	display: flex;
 	flex-direction: row;
 	align-items: center;
 	justify-content: end;
-	gap: 5px;
+	gap: var(--size-4-1);
 }
 
 .cards-view-plugin .card .card-info .folder-name {
 	flex-grow: 1;
-}
-
-.cards-view-plugin .card .card-info button {
-	border: none;
-	box-shadow: none;
 }

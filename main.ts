@@ -96,7 +96,7 @@ class CardsViewPluginView extends ItemView {
 			cardInfo.createEl('span', { text: `${parentFolder.path}/`, cls: 'folder-name' });
 		}
 
-		const trashButton = cardInfo.createEl('button');
+		const trashButton = cardInfo.createEl('div', { cls: 'clickable-icon' });
 		setIcon(trashButton, 'trash');
 		trashButton.addEventListener('click', async (e: MouseEvent) => {
 			e.stopPropagation();
