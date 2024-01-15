@@ -148,6 +148,8 @@ class CardsViewPluginView extends ItemView {
 			}
 		});
 		const observer = new ResizeObserver(() => {
+			const columns = Math.floor(viewContent.clientWidth / 200);
+			this.cardContainer.style.setProperty('--columns', columns.toString())
 			this.notesGrid?.layout?.();
 		});
 		observer.observe(this.cardContainer);

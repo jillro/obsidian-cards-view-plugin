@@ -7,6 +7,8 @@
 	container-type: inline-size;
 	--card-padding: var(--size-4-3);
 	--card-gutter: var(--size-4-5);
+	--columns: 0;
+	--card-size: calc((100% - var(--card-gutter) * (var(--columns) - 1)) / var(--columns));
 }
 
 .cards-view-plugin .card {
@@ -15,7 +17,7 @@
 	padding: var(--card-padding);
 	word-wrap: break-word;
 	overflow-y: hidden;
-	width: calc((100% - var(--card-gutter)) / 2);
+	width: var(--card-size);
 	margin: 0 0 var(--card-gutter);
 }
 
@@ -36,18 +38,6 @@
 
 .cards-view-plugin .card ul {
 	padding-left: var(--size-4-5);
-}
-
-@container (min-width: 768px) {
-	.cards-view-plugin .card {
-		width: calc((100% - var(--card-gutter)*2) / 3);
-	}
-}
-
-@container (min-width: 1024px) {
-	.cards-view-plugin .card {
-		width: calc((100% - var(--card-gutter)*3) / 4);
-	}
 }
 
 .cards-view-plugin .card:hover {
