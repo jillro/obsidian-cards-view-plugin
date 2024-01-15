@@ -1,10 +1,14 @@
 import {ItemView, MarkdownRenderer, Plugin, setIcon, TAbstractFile, TFile, TFolder, WorkspaceLeaf} from 'obsidian';
 import Masonry from 'masonry-layout';
+import {CardsViewSettings, CardsViewSettingsTab, DEFAULT_SETTINGS} from "./settings";
 
 const VIEW_TYPE = 'cards-view-plugin';
 
 export default class CardsViewPlugin extends Plugin {
+	settings: CardsViewSettings;
 	async onload() {
+		await this.loadSettings()
+		this.addSettingTab(new CardsViewSettingsTab(this.app, this));
 		this.addRibbonIcon('align-start-horizontal', 'Card explorer', () => {
 			this.activateView();
 		});
@@ -17,7 +21,7 @@ export default class CardsViewPlugin extends Plugin {
 			},
 		});
 
-		this.registerView(VIEW_TYPE, (leaf) => new CardsViewPluginView(leaf));
+		this.registerView(VIEW_TYPE, (leaf) => new CardsViewPluginView(this.settings, leaf));
 	}
 
 	onunload() {
@@ -37,15 +41,25 @@ export default class CardsViewPlugin extends Plugin {
 			await leaf.setViewState({ type: VIEW_TYPE, active: true });
 		}
 	}
+
+	async loadSettings() {
+		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+	}
+
+	async saveSettings() {
+		await this.saveData(this.settings);
+	}
 }
 
 class CardsViewPluginView extends ItemView {
 	private cardContainer: HTMLElement;
 	private notesGrid: Masonry;
 	private nextCardIndex = 0;
+	private settings: CardsViewSettings;
 
-	constructor(leaf: WorkspaceLeaf) {
+	constructor(settings: CardsViewSettings, leaf: WorkspaceLeaf) {
 		super(leaf);
+		this.settings = settings;
 	}
 
 	getViewType() {
@@ -148,7 +162,7 @@ class CardsViewPluginView extends ItemView {
 			}
 		});
 		const observer = new ResizeObserver(() => {
-			const columns = Math.floor(viewContent.clientWidth / 200);
+			const columns = Math.floor(viewContent.clientWidth / this.settings.minCardWidth);
 			this.cardContainer.style.setProperty('--columns', columns.toString())
 			this.notesGrid?.layout?.();
 		});
