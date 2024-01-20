@@ -1,15 +1,28 @@
-import {ItemView, MarkdownRenderer, Plugin, setIcon, TAbstractFile, TFile, TFolder, WorkspaceLeaf} from 'obsidian';
-import Masonry from 'masonry-layout';
-import {CardsViewSettings, CardsViewSettingsTab, DEFAULT_SETTINGS} from "./settings";
+import {
+	ItemView,
+	MarkdownRenderer,
+	Plugin,
+	setIcon,
+	TAbstractFile,
+	TFile,
+	TFolder,
+	WorkspaceLeaf,
+} from "obsidian";
+import Masonry from "masonry-layout";
+import {
+	CardsViewSettings,
+	CardsViewSettingsTab,
+	DEFAULT_SETTINGS,
+} from "./settings";
 
-const VIEW_TYPE = 'cards-view-plugin';
+const VIEW_TYPE = "cards-view-plugin";
 
 export default class CardsViewPlugin extends Plugin {
 	settings: CardsViewSettings;
 	async onload() {
-		await this.loadSettings()
+		await this.loadSettings();
 		this.addSettingTab(new CardsViewSettingsTab(this.app, this));
-		this.addRibbonIcon('align-start-horizontal', 'Card explorer', () => {
+		this.addRibbonIcon("align-start-horizontal", "Card explorer", () => {
 			this.activateView();
 		});
 
@@ -21,12 +34,13 @@ export default class CardsViewPlugin extends Plugin {
 			},
 		});
 
-		this.registerView(VIEW_TYPE, (leaf) => new CardsViewPluginView(this.settings, leaf));
+		this.registerView(
+			VIEW_TYPE,
+			(leaf) => new CardsViewPluginView(this.settings, leaf),
+		);
 	}
 
-	onunload() {
-
-	}
+	onunload() {}
 
 	async activateView() {
 		const { workspace } = this.app;
@@ -37,13 +51,17 @@ export default class CardsViewPlugin extends Plugin {
 		if (leaves.length) {
 			leaf = leaves[0];
 		} else {
-			leaf = workspace.getLeaf('tab');
+			leaf = workspace.getLeaf("tab");
 			await leaf.setViewState({ type: VIEW_TYPE, active: true });
 		}
 	}
 
 	async loadSettings() {
-		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+		this.settings = Object.assign(
+			{},
+			DEFAULT_SETTINGS,
+			await this.loadData(),
+		);
 	}
 
 	async saveSettings() {
@@ -76,7 +94,7 @@ class CardsViewPluginView extends ItemView {
 		for (const file of folder.children) {
 			if (file instanceof TFolder) {
 				notes.push(...(await this.getNotes(file)));
-			} else if (file instanceof TFile && file.extension === 'md') {
+			} else if (file instanceof TFile && file.extension === "md") {
 				notes.push(file);
 			}
 		}
@@ -85,35 +103,45 @@ class CardsViewPluginView extends ItemView {
 	}
 
 	async getFileStringId(filename: string): Promise<string> {
-		const buffer = await crypto.subtle.digest('SHA-1', new TextEncoder().encode(filename))
+		const buffer = await crypto.subtle.digest(
+			"SHA-1",
+			new TextEncoder().encode(filename),
+		);
 		// convert buffer to hexa string
-		const hash = Array.from(new Uint8Array(buffer)).map((x: number) => ('00' + x.toString(16)).slice(-2)).join('');
+		const hash = Array.from(new Uint8Array(buffer))
+			.map((x: number) => ("00" + x.toString(16)).slice(-2))
+			.join("");
 		return `note-${hash}`;
 	}
 
 	async renderCard(file: TFile, div: HTMLElement) {
-		div.createEl('h3', { text: file.basename });
+		div.createEl("h3", { text: file.basename });
 
-		const content = (await this.app.vault.cachedRead(file));
+		const content = await this.app.vault.cachedRead(file);
 		// get first 10 lines of the file
-		const tenLines = content.split('\n').slice(0, 10).join('\n');
-		const summary = `${tenLines.length < 200 ? tenLines : content.slice(0, 200)}${content.length > 200 ? ' ...' : ''}`;
+		const tenLines = content.split("\n").slice(0, 10).join("\n");
+		const summary = `${tenLines.length < 200 ? tenLines : content.slice(0, 200)}${content.length > 200 ? " ..." : ""}`;
 		await MarkdownRenderer.render(this.app, summary, div, file.path, this);
 
-		const cardInfo = div.createEl('div', { cls: 'card-info' });
+		const cardInfo = div.createEl("div", { cls: "card-info" });
 
 		const parentFolder = file.parent as TFolder;
-		if (parentFolder.path !== '/') {
-			setIcon(cardInfo, 'folder' );
-			cardInfo.createEl('span', { text: `${parentFolder.path}/`, cls: 'folder-name' });
+		if (parentFolder.path !== "/") {
+			setIcon(cardInfo, "folder");
+			cardInfo.createEl("span", {
+				text: `${parentFolder.path}/`,
+				cls: "folder-name",
+			});
 		}
 
-		const trashButton = cardInfo.createEl('div', { cls: 'clickable-icon' });
-		setIcon(trashButton, 'trash');
-		trashButton.addEventListener('click', async (e: MouseEvent) => {
+		const trashButton = cardInfo.createEl("div", { cls: "clickable-icon" });
+		setIcon(trashButton, "trash");
+		trashButton.addEventListener("click", async (e: MouseEvent) => {
 			e.stopPropagation();
 			const eventTarget = e.target as HTMLElement;
-			this.notesGrid?.remove?.([eventTarget.parentElement?.parentElement?.parentElement]);
+			this.notesGrid?.remove?.([
+				eventTarget.parentElement?.parentElement?.parentElement,
+			]);
 			this.notesGrid?.layout?.();
 			await this.app.vault.trash(file, true);
 		});
@@ -121,14 +149,16 @@ class CardsViewPluginView extends ItemView {
 
 	async addCard(file: TFile, prepend = false) {
 		// id is a hash of the file path
-		const div = createEl('div', { cls: `card ${await this.getFileStringId(file.path)}` });
+		const div = createEl("div", {
+			cls: `card ${await this.getFileStringId(file.path)}`,
+		});
 		await this.renderCard(file, div);
 
-		div.addEventListener('click', () => {
-			this.app.workspace.getLeaf('tab').openFile(file);
+		div.addEventListener("click", () => {
+			this.app.workspace.getLeaf("tab").openFile(file);
 		});
 		this.cardContainer.appendChild(div);
-		this.notesGrid[prepend ? 'prepended': 'appended']?.([div]);
+		this.notesGrid[prepend ? "prepended" : "appended"]?.([div]);
 	}
 
 	async getCard(file: TFile) {
@@ -139,7 +169,7 @@ class CardsViewPluginView extends ItemView {
 		this.cardContainer.empty();
 
 		const files = (await this.getNotes(folder)).sort(
-			(a: TFile, b :TFile) => b.stat.mtime - a.stat.mtime
+			(a: TFile, b: TFile) => b.stat.mtime - a.stat.mtime,
 		);
 
 		for (; this.nextCardIndex < 50; this.nextCardIndex++) {
@@ -148,75 +178,102 @@ class CardsViewPluginView extends ItemView {
 			await this.addCard(file);
 		}
 
-
 		// TODO search + button plus + épingler et couleurs
 		// Extension commander et omnisearch
 	}
 
 	async onOpen() {
 		const viewContent = this.containerEl.children[1];
-		this.cardContainer = viewContent.createEl('div');
-		this.cardContainer.className += 'cards-view-plugin';
+		this.cardContainer = viewContent.createEl("div");
+		this.cardContainer.className += "cards-view-plugin";
 		this.notesGrid = new Masonry(this.cardContainer, {
-			itemSelector: '.card',
+			itemSelector: ".card",
 			gutter: 20,
 			transitionDuration: 0,
 			containerStyle: {
-				width: '100%',
-			}
+				width: "100%",
+			},
 		});
 		const observer = new ResizeObserver(() => {
-			const columns = Math.floor(viewContent.clientWidth / this.settings.minCardWidth);
-			this.cardContainer.style.setProperty('--columns', columns.toString())
+			const columns = Math.floor(
+				viewContent.clientWidth / this.settings.minCardWidth,
+			);
+			this.cardContainer.style.setProperty(
+				"--columns",
+				columns.toString(),
+			);
 			this.notesGrid?.layout?.();
 		});
 		observer.observe(this.cardContainer);
 
 		const root = this.app.vault.getRoot();
 		await this.loadFolder(root);
-		this.registerEvent(this.app.vault.on('create', async (file: TFile) => {
-			if (file.extension === 'md') {
-				await this.addCard(file, true);
-				this.notesGrid?.layout?.();
-				this.nextCardIndex++;
-			}
-		}));
-		this.registerEvent(this.app.vault.on('delete', async (file: TAbstractFile) => {
-			if (file instanceof TFile && file.extension === 'md') {
-				const element = document.getElementsByClassName(await this.getFileStringId(file.path))[0];
-				this.notesGrid?.remove?.([element]);
-				this.notesGrid?.layout?.();
-				this.nextCardIndex--;
-			}
-		}));
-		this.registerEvent(this.app.vault.on('modify', async (file: TFile) => {
-			if (file.extension === 'md') {
-				const element = document.getElementsByClassName(await this.getFileStringId(file.path))[0];
-				element.empty();
-				await this.renderCard(file, element as HTMLElement);
-				this.notesGrid?.layout?.();
-			}
-		}));
-		this.registerEvent(this.app.vault.on('rename', async (file: TFile, oldPath: string) => {
-			if (file.extension === 'md') {
-				const oldClass = await this.getFileStringId(oldPath);
-				const element = document.getElementsByClassName(oldClass)[0];
-				element.className = element.className.replace(oldClass, await this.getFileStringId(file.path));
-				element.empty();
-				await this.renderCard(file, element as HTMLElement);
-				this.notesGrid?.layout?.();
-			}
-		}));
+		this.registerEvent(
+			this.app.vault.on("create", async (file: TFile) => {
+				if (file.extension === "md") {
+					await this.addCard(file, true);
+					this.notesGrid?.layout?.();
+					this.nextCardIndex++;
+				}
+			}),
+		);
+		this.registerEvent(
+			this.app.vault.on("delete", async (file: TAbstractFile) => {
+				if (file instanceof TFile && file.extension === "md") {
+					const element = document.getElementsByClassName(
+						await this.getFileStringId(file.path),
+					)[0];
+					this.notesGrid?.remove?.([element]);
+					this.notesGrid?.layout?.();
+					this.nextCardIndex--;
+				}
+			}),
+		);
+		this.registerEvent(
+			this.app.vault.on("modify", async (file: TFile) => {
+				if (file.extension === "md") {
+					const element = document.getElementsByClassName(
+						await this.getFileStringId(file.path),
+					)[0];
+					element.empty();
+					await this.renderCard(file, element as HTMLElement);
+					this.notesGrid?.layout?.();
+				}
+			}),
+		);
+		this.registerEvent(
+			this.app.vault.on(
+				"rename",
+				async (file: TFile, oldPath: string) => {
+					if (file.extension === "md") {
+						const oldClass = await this.getFileStringId(oldPath);
+						const element =
+							document.getElementsByClassName(oldClass)[0];
+						element.className = element.className.replace(
+							oldClass,
+							await this.getFileStringId(file.path),
+						);
+						element.empty();
+						await this.renderCard(file, element as HTMLElement);
+						this.notesGrid?.layout?.();
+					}
+				},
+			),
+		);
 
 		let loading = false;
 		// On scroll 80% of viewContent, load more cards
-		viewContent.addEventListener('scroll', async () => {
+		viewContent.addEventListener("scroll", async () => {
 			if (loading) return;
-			if (viewContent.scrollTop + viewContent.clientHeight < viewContent.scrollHeight - 500) return;
+			if (
+				viewContent.scrollTop + viewContent.clientHeight <
+				viewContent.scrollHeight - 500
+			)
+				return;
 
 			loading = true;
 			const files = (await this.getNotes(root)).sort(
-				(a: TFile, b :TFile) => b.stat.mtime - a.stat.mtime
+				(a: TFile, b: TFile) => b.stat.mtime - a.stat.mtime,
 			);
 			for (let i = this.nextCardIndex; i < this.nextCardIndex + 50; i++) {
 				const file = files[i];
@@ -225,7 +282,7 @@ class CardsViewPluginView extends ItemView {
 			}
 			this.nextCardIndex += 50;
 			loading = false;
-		})
+		});
 	}
 
 	async onClose() {

@@ -1,5 +1,5 @@
 import CardsViewPlugin from "./main";
-import {App, Notice, PluginSettingTab, Setting} from "obsidian";
+import { App, Notice, PluginSettingTab, Setting } from "obsidian";
 
 export interface CardsViewSettings {
 	minCardWidth: number;
@@ -7,7 +7,7 @@ export interface CardsViewSettings {
 
 export const DEFAULT_SETTINGS: CardsViewSettings = {
 	minCardWidth: 200,
-}
+};
 
 export class CardsViewSettingsTab extends PluginSettingTab {
 	plugin: CardsViewPlugin;
@@ -22,20 +22,21 @@ export class CardsViewSettingsTab extends PluginSettingTab {
 		containerEl.empty();
 
 		new Setting(containerEl)
-			.setName('Minimum card width')
-			.setDesc('Cards will not be smaller than this width (in pixels)')
-			.addText(text => text
-				.setPlaceholder('200')
-				.setValue(this.plugin.settings.minCardWidth.toString())
-				.onChange(async (value) => {
-					if (isNaN(parseInt(value))) {
-						new Notice('Invalid number');
-						return;
-					}
+			.setName("Minimum card width")
+			.setDesc("Cards will not be smaller than this width (in pixels)")
+			.addText((text) =>
+				text
+					.setPlaceholder("200")
+					.setValue(this.plugin.settings.minCardWidth.toString())
+					.onChange(async (value) => {
+						if (isNaN(parseInt(value))) {
+							new Notice("Invalid number");
+							return;
+						}
 
-					this.plugin.settings.minCardWidth = parseInt(value);
-					await this.plugin.saveSettings();
-				})
+						this.plugin.settings.minCardWidth = parseInt(value);
+						await this.plugin.saveSettings();
+					}),
 			);
 	}
 }
