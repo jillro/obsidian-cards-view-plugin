@@ -1,8 +1,16 @@
 /**
  * Summary cards
  */
+.cards-view-action-bar {
+	display: flex;
+	flex-direction: row;
+	justify-content: end;
+	gap: var(--size-4-5);
+	margin-bottom: var(--size-4-5);
+}
 
-.cards-view-plugin {
+
+.cards-view-main {
 	position: relative;
 	container-type: inline-size;
 	--card-padding: var(--size-4-3);
@@ -11,7 +19,7 @@
 	--card-size: calc((100% - var(--card-gutter) * (var(--columns) - 1)) / var(--columns));
 }
 
-.cards-view-plugin .card {
+.cards-view-main .card {
 	background-color: var(--background-primary-alt);
 	border: 1px solid var(--background-modifier-border);
 	padding: var(--card-padding);
@@ -21,34 +29,34 @@
 	margin: 0 0 var(--card-gutter);
 }
 
-.cards-view-plugin .card {
+.cards-view-main .card {
 	font-size: 0.8rem;
 }
 
-.cards-view-plugin .card p,
-.cards-view-plugin .card ul {
+.cards-view-main .card p,
+.cards-view-main .card ul {
 	margin: 0.3rem 0;
 }
 
-.cards-view-plugin .card h1,
-.cards-view-plugin .card h2,
-.cards-view-plugin .card h3 {
+.cards-view-main .card h1,
+.cards-view-main .card h2,
+.cards-view-main .card h3 {
 	margin: 0 0 0.3rem;
 }
 
-.cards-view-plugin .card ul {
+.cards-view-main .card ul {
 	padding-left: var(--size-4-5);
 }
 
-.cards-view-plugin .card:hover {
+.cards-view-main .card:hover {
 	border-color: var(--background-modifier-border-hover);
 }
 
-.cards-view-plugin .card h3 {
+.cards-view-main .card h3 {
 	word-wrap: break-word;
 }
 
-.cards-view-plugin .card .card-info {
+.cards-view-main .card .card-info {
 	margin: calc(-1 * var(--card-padding));
 	margin-top: 0;
 	border-top: 1px solid var(--background-modifier-border);
@@ -61,6 +69,6 @@
 	gap: var(--size-4-1);
 }
 
-.cards-view-plugin .card .card-info .folder-name {
+.cards-view-main .card .card-info .folder-name {
 	flex-grow: 1;
 }

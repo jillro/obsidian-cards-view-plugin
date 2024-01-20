@@ -7,6 +7,7 @@ This is a plugin for Obsidian.md that displays a card view of your notes.
 ## Features
 
 - Display notes in a card view
+- Sorts by last modified or created date
 
 ## Installation
 

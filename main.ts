@@ -1,6 +1,7 @@
 import {
 	ItemView,
 	MarkdownRenderer,
+	Menu,
 	Plugin,
 	setIcon,
 	TAbstractFile,
@@ -16,6 +17,11 @@ import {
 } from "./settings";
 
 const VIEW_TYPE = "cards-view-plugin";
+
+enum Sort {
+	Created = "ctime",
+	Modified = "mtime",
+}
 
 export default class CardsViewPlugin extends Plugin {
 	settings: CardsViewSettings;
@@ -74,6 +80,7 @@ class CardsViewPluginView extends ItemView {
 	private notesGrid: Masonry;
 	private nextCardIndex = 0;
 	private settings: CardsViewSettings;
+	private sort: Sort = Sort.Modified;
 
 	constructor(settings: CardsViewSettings, leaf: WorkspaceLeaf) {
 		super(leaf);
@@ -167,12 +174,17 @@ class CardsViewPluginView extends ItemView {
 
 	async loadFolder(folder: TFolder) {
 		this.cardContainer.empty();
+		this.notesGrid?.reloadItems?.();
 
 		const files = (await this.getNotes(folder)).sort(
-			(a: TFile, b: TFile) => b.stat.mtime - a.stat.mtime,
+			(a: TFile, b: TFile) => b.stat[this.sort] - a.stat[this.sort],
 		);
 
-		for (; this.nextCardIndex < 50; this.nextCardIndex++) {
+		for (
+			this.nextCardIndex = 0;
+			this.nextCardIndex < 50;
+			this.nextCardIndex++
+		) {
 			const file = files[this.nextCardIndex];
 			if (!file) break;
 			await this.addCard(file);
@@ -184,8 +196,37 @@ class CardsViewPluginView extends ItemView {
 
 	async onOpen() {
 		const viewContent = this.containerEl.children[1];
-		this.cardContainer = viewContent.createEl("div");
-		this.cardContainer.className += "cards-view-plugin";
+		const actionBar = viewContent.createEl("div", {
+			cls: "cards-view-action-bar",
+		});
+		const sortButton = actionBar.createEl("div", {
+			cls: "clickable-icon",
+		});
+		setIcon(sortButton, "arrow-down-wide-narrow");
+		sortButton.addEventListener("click", (event) => {
+			const sortMenu = new Menu();
+			sortMenu.addItem((item) => {
+				item.setTitle("Last created");
+				item.setChecked(this.sort == Sort.Created);
+				item.onClick(async () => {
+					this.sort = Sort.Created;
+					await this.loadFolder(this.app.vault.getRoot());
+				});
+			});
+			sortMenu.addItem((item) => {
+				item.setTitle("Last modified");
+				item.setChecked(this.sort == Sort.Modified);
+				item.onClick(async () => {
+					this.sort = Sort.Modified;
+					await this.loadFolder(this.app.vault.getRoot());
+				});
+			});
+			sortMenu.showAtMouseEvent(event);
+		});
+
+		this.cardContainer = viewContent.createEl("div", {
+			cls: "cards-view-main",
+		});
 		this.notesGrid = new Masonry(this.cardContainer, {
 			itemSelector: ".card",
 			gutter: 20,
