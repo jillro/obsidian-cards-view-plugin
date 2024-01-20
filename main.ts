@@ -84,19 +84,17 @@ class CardsViewPluginView extends ItemView {
 		return notes;
 	}
 
-	async getFileStringId(file: TFile): Promise<string> {
-		const buffer = await crypto.subtle.digest('SHA-1', new TextEncoder().encode(file.path + file.basename))
+	async getFileStringId(filename: string): Promise<string> {
+		const buffer = await crypto.subtle.digest('SHA-1', new TextEncoder().encode(filename))
 		// convert buffer to hexa string
 		const hash = Array.from(new Uint8Array(buffer)).map((x: number) => ('00' + x.toString(16)).slice(-2)).join('');
 		return `note-${hash}`;
 	}
 
-	async addCard(file: TFile, prepend = false) {
-		const content = (await this.app.vault.cachedRead(file));
-		// id is a hash of the file path
-		const div = createEl('div', { cls: `card ${await this.getFileStringId(file)}` });
+	async renderCard(file: TFile, div: HTMLElement) {
 		div.createEl('h3', { text: file.basename });
 
+		const content = (await this.app.vault.cachedRead(file));
 		// get first 10 lines of the file
 		const tenLines = content.split('\n').slice(0, 10).join('\n');
 		const summary = `${tenLines.length < 200 ? tenLines : content.slice(0, 200)}${content.length > 200 ? ' ...' : ''}`;
@@ -119,6 +117,12 @@ class CardsViewPluginView extends ItemView {
 			this.notesGrid?.layout?.();
 			await this.app.vault.trash(file, true);
 		});
+	}
+
+	async addCard(file: TFile, prepend = false) {
+		// id is a hash of the file path
+		const div = createEl('div', { cls: `card ${await this.getFileStringId(file.path)}` });
+		await this.renderCard(file, div);
 
 		div.addEventListener('click', () => {
 			this.app.workspace.getLeaf('tab').openFile(file);
@@ -170,21 +174,39 @@ class CardsViewPluginView extends ItemView {
 
 		const root = this.app.vault.getRoot();
 		await this.loadFolder(root);
-		this.app.vault.on('create', async (file: TFile) => {
+		this.registerEvent(this.app.vault.on('create', async (file: TFile) => {
 			if (file.extension === 'md') {
 				await this.addCard(file, true);
 				this.notesGrid?.layout?.();
 				this.nextCardIndex++;
 			}
-		})
-		this.app.vault.on('delete', async (file: TAbstractFile) => {
+		}));
+		this.registerEvent(this.app.vault.on('delete', async (file: TAbstractFile) => {
 			if (file instanceof TFile && file.extension === 'md') {
-				const element = document.getElementsByClassName(await this.getFileStringId(file))[0];
+				const element = document.getElementsByClassName(await this.getFileStringId(file.path))[0];
 				this.notesGrid?.remove?.([element]);
 				this.notesGrid?.layout?.();
 				this.nextCardIndex--;
 			}
-		})
+		}));
+		this.registerEvent(this.app.vault.on('modify', async (file: TFile) => {
+			if (file.extension === 'md') {
+				const element = document.getElementsByClassName(await this.getFileStringId(file.path))[0];
+				element.empty();
+				await this.renderCard(file, element as HTMLElement);
+				this.notesGrid?.layout?.();
+			}
+		}));
+		this.registerEvent(this.app.vault.on('rename', async (file: TFile, oldPath: string) => {
+			if (file.extension === 'md') {
+				const oldClass = await this.getFileStringId(oldPath);
+				const element = document.getElementsByClassName(oldClass)[0];
+				element.className = element.className.replace(oldClass, await this.getFileStringId(file.path));
+				element.empty();
+				await this.renderCard(file, element as HTMLElement);
+				this.notesGrid?.layout?.();
+			}
+		}));
 
 		let loading = false;
 		// On scroll 80% of viewContent, load more cards
