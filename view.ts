@@ -75,8 +75,8 @@ export class CardsViewPluginView extends ItemView {
 
 		const cardInfo = div.createEl("div", { cls: "card-info" });
 
-		const parentFolder = file.parent as TFolder;
-		if (parentFolder.path !== "/") {
+		const parentFolder = file.parent;
+		if (parentFolder != null && parentFolder.path !== "/") {
 			setIcon(cardInfo, "folder");
 			cardInfo.createEl("span", {
 				text: `${parentFolder.path}/`,
