@@ -11,7 +11,7 @@ import {
 import Masonry from "masonry-layout";
 import { CardsViewSettings } from "./settings";
 
-export const VIEW_TYPE = "cards-view-plugin";
+export const VIEW_TYPE = "cards-view";
 
 enum Sort {
 	Created = "ctime",
@@ -35,7 +35,7 @@ export class CardsViewPluginView extends ItemView {
 	}
 
 	getDisplayText() {
-		return this.app.vault.getName();
+		return "Cards View";
 	}
 
 	// Get all notes recursively in a flat array
