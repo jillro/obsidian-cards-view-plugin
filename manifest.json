@@ -4,7 +4,7 @@
 	"version": "1.2.3",
 	"minAppVersion": "0.15.0",
 	"description": "Displays a card view of your notes.",
-	"author": "Maud Royer <hello@maudroyer.fr>",
+	"author": "Maud Royer",
 	"authorUrl": "https://maudroyer.fr",
 	"isDesktopOnly": false
 }
