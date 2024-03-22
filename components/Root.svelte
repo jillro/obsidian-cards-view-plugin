@@ -43,7 +43,6 @@
 	}
 
 	onMount(() => {
-		console.log('mount')
 		columns = Math.floor(viewContent.clientWidth / settings.minCardWidth);
 		notesGrid = new MiniMasonry({
 			container: cardsContainer,

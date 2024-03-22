@@ -3,6 +3,7 @@
   "compilerOptions": {
 	"types": ["svelte", "node"],
     "baseUrl": ".",
+    "inlineSources": true,
     "module": "ESNext",
     "target": "ES6",
     "allowJs": true,

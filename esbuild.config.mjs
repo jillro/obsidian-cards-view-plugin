@@ -16,10 +16,8 @@ const prod = (process.argv[2] === "production");
 const context = await esbuild.context({
 	plugins: [
 		esbuildSvelte({
-			compilerOptions: { css: "injected", enableSourcemap: !prod },
-			preprocess: sveltePreprocess({
-				sourceMap: !prod,
-			}),
+			compilerOptions: { css: "injected", ...(prod ? {} : {enableSourcemap: true }) },
+			preprocess: sveltePreprocess(...(prod ? [] : [{ sourceMap: true }])),
 			filterWarnings: (warning) => warning.code !== "css-unused-selector",
 		}),
 	],

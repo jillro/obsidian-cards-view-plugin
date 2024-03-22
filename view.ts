@@ -114,7 +114,6 @@ export class CardsViewPluginView extends ItemView {
 			const rootLeaf = this.app.workspace.getMostRecentLeaf(
 				this.app.workspace.rootSplit,
 			);
-			console.log("leaf", rootLeaf?.view?.getViewType());
 			store.viewIsVisible.set(
 				rootLeaf?.view?.getViewType() === VIEW_TYPE,
 			);

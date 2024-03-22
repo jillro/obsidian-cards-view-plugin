@@ -9,13 +9,9 @@ import { CardsViewPluginView, VIEW_TYPE } from "./view";
 import store from "./components/store";
 
 export default class CardsViewPlugin extends Plugin {
-	settings?: CardsViewSettings;
+	settings: CardsViewSettings = Object.assign({}, DEFAULT_SETTINGS);
 	async onload() {
-		this.settings = Object.assign(
-			{},
-			DEFAULT_SETTINGS,
-			await this.loadData(),
-		);
+		this.settings = Object.assign(this.settings, await this.loadData());
 
 		this.addSettingTab(new CardsViewSettingsTab(this.app, this));
 		this.addRibbonIcon("align-start-horizontal", "Card view", () => {
