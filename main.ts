@@ -1,23 +1,30 @@
 import { Plugin, WorkspaceLeaf } from "obsidian";
+
 import {
-	CardsViewSettings,
+	type CardsViewSettings,
 	CardsViewSettingsTab,
 	DEFAULT_SETTINGS,
 } from "./settings";
 import { CardsViewPluginView, VIEW_TYPE } from "./view";
+import store from "./components/store";
 
 export default class CardsViewPlugin extends Plugin {
-	settings: CardsViewSettings;
+	settings?: CardsViewSettings;
 	async onload() {
-		await this.loadSettings();
+		this.settings = Object.assign(
+			{},
+			DEFAULT_SETTINGS,
+			await this.loadData(),
+		);
+
 		this.addSettingTab(new CardsViewSettingsTab(this.app, this));
-		this.addRibbonIcon("align-start-horizontal", "Card explorer", () => {
+		this.addRibbonIcon("align-start-horizontal", "Card view", () => {
 			this.activateView();
 		});
 
 		this.addCommand({
 			id: "cards-view-plugin",
-			name: "Open card explorer",
+			name: "Open card view",
 			callback: () => {
 				this.activateView();
 			},
@@ -44,14 +51,7 @@ export default class CardsViewPlugin extends Plugin {
 		}
 
 		await leaf.setViewState({ type: VIEW_TYPE, active: true });
-	}
-
-	async loadSettings() {
-		this.settings = Object.assign(
-			{},
-			DEFAULT_SETTINGS,
-			await this.loadData(),
-		);
+		store.viewIsVisible.set(true);
 	}
 
 	async saveSettings() {
