@@ -33,7 +33,11 @@ export const searchResultFiles = derived(
 			set(
 				$sortedFiles.filter((file, index) => {
 					const [contentMatch, nameMatch] = searchResults[index];
-					return contentMatch || nameMatch;
+
+					return (
+						(contentMatch && contentMatch.score > -2) ||
+						(nameMatch && nameMatch.score > -2)
+					);
 				}),
 			);
 		});
