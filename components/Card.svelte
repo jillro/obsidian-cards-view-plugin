@@ -39,8 +39,7 @@
 		padding: var(--card-padding);
 		word-wrap: break-word;
 		overflow-y: hidden;
-		width: var(--card-size);
-		margin: 0 0 var(--card-gutter);
+		margin: 0;
 		transition-property: transform;
 		transition-duration: 0.4s;
 	}

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import {debounce, Menu, setIcon, TFile} from "obsidian";
+	import {debounce, Menu, SearchComponent, setIcon, TFile} from "obsidian";
 	import {afterUpdate, onMount} from "svelte";
 	import MiniMasonry from "minimasonry";
 
@@ -17,10 +17,15 @@
 	let viewContent: HTMLElement;
 	let cardsContainer: HTMLElement;
 	let columns: number
-	let enableLayoutTransition = true;
 
 	const sortIcon = (element: HTMLElement) => {
 		setIcon(element, "arrow-down-wide-narrow");
+	}
+
+	const searchInput = (element: HTMLElement) => {
+		(new SearchComponent(element)).onChange((value) => {
+			$searchQuery =value;
+		});
 	}
 
 	function sortMenu(event: MouseEvent) {
@@ -48,6 +53,8 @@
 			container: cardsContainer,
 			baseWidth: settings.minCardWidth,
 			gutter: 20,
+			surroundingGutter: false,
+			ultimateGutter: 20,
 		});
 		notesGrid.layout();
 
@@ -68,9 +75,7 @@
 </script>
 
 <div class="action-bar" bind:this={viewContent}>
-	<div class="search-input-container">
-		<input type="search" enterkeyhint="search" bind:value={$searchQuery} />
-	</div>
+	<div use:searchInput />
 	<button class="clickable-icon sort-button" use:sortIcon on:click={sortMenu} />
 </div>
 <div class="cards-container" bind:this={cardsContainer} style:--columns={columns}>
@@ -97,9 +102,10 @@
 	.cards-container {
 		position: relative;
 		container-type: inline-size;
+	}
+
+	.cards-container :global(*) {
 		--card-padding: var(--size-4-3);
 		--card-gutter: var(--size-4-5);
-		--columns: 0;
-		--card-size: calc((100% - var(--card-gutter) * (var(--columns) - 1)) / var(--columns));
 	}
 </style>
