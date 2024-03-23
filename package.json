@@ -1,6 +1,6 @@
 {
 	"name": "cards-view",
-	"version": "1.3.2",
+	"version": "1.3.3",
 	"description": "Plugin for Obsidian.md. Displays a card view of your notes.",
 	"main": "main.js",
 	"scripts": {
