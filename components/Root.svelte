@@ -85,6 +85,8 @@
 			renderFile={(el) => renderFile(file, el)}
 			openFile={() => openFile(file)}
 			trashFile={() => trashFile(file)}
+			tags={settings.tags}
+			textColor={settings.textColor}
 			on:loaded={() => notesGrid.layout()}
 		/>
 	{/each}
