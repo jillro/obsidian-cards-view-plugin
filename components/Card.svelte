@@ -1,12 +1,15 @@
 <script lang="ts">
 	import {setIcon, TFile} from "obsidian";
-	import {createEventDispatcher, onMount} from "svelte";
+	import { createEventDispatcher, onMount, afterUpdate } from "svelte";
+
 	import {skipNextTransition} from "./store";
 
 	export let file: TFile;
 	export let openFile: () => void;
 	export let renderFile: (el: HTMLElement) => Promise<void>;
 	export let trashFile: () => void;
+	export let tags: TagSetting[] = [];
+	export let textColor: string;
 
 	let contentDiv: HTMLElement;
 
@@ -14,16 +17,44 @@
 	const folderIcon = (element: HTMLElement) => setIcon(element, 'folder');
 
 	const dispatch = createEventDispatcher();
+	
+	type TagSetting = {
+		name: string;
+		color: string;
+	};
+
+	let backgroundColor = '';
+	let cardtextColor ='';
+
+
+	const updateBackgroundColor = () => {
+		if (contentDiv) {
+			const content = contentDiv.textContent || contentDiv.innerText;
+			for (let tag of tags) {
+				if (content.includes('#' + tag.name)) {
+					backgroundColor = tag.color;
+					cardtextColor = textColor;
+					break;
+				}
+			}
+		}
+	};
+
 	onMount(async () => {
-		await renderFile(contentDiv)
-		dispatch('loaded')
+		await renderFile(contentDiv);
+		updateBackgroundColor();
+		dispatch('loaded');
+	});
+
+	afterUpdate(() => { 
+		updateBackgroundColor();
 	});
 </script>
 
-<div class="card" class:skip-transition={$skipNextTransition} on:click={openFile} role="link" on:keydown={openFile} tabindex="0">
+<div class="card" style="background-color: {backgroundColor}; color: {cardtextColor}; border-color: {backgroundColor};" class:skip-transition={$skipNextTransition} on:click={openFile} role="link" on:keydown={openFile} tabindex="0">
 	<h3>{file.basename}</h3>
 	<div bind:this={contentDiv} />
-	<div class="card-info">
+	<div class="card-info" style="background-color: {backgroundColor}; color: {cardtextColor}; border-color: {backgroundColor};">
 		{#if file.parent != null && file.parent.path !== '/'}
 			<span use:folderIcon /><span class="folder-name">{file.parent.path}</span>
 		{/if}
