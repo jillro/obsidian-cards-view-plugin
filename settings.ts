@@ -3,10 +3,12 @@ import { App, Notice, PluginSettingTab, Setting } from "obsidian";
 
 export interface CardsViewSettings {
 	minCardWidth: number;
+	launchOnStart: boolean;
 }
 
 export const DEFAULT_SETTINGS: CardsViewSettings = {
 	minCardWidth: 200,
+	launchOnStart: false,
 };
 
 export class CardsViewSettingsTab extends PluginSettingTab {
@@ -37,6 +39,29 @@ export class CardsViewSettingsTab extends PluginSettingTab {
 						this.plugin.settings.minCardWidth = parseInt(value);
 						await this.plugin.saveSettings();
 					}),
+			);
+
+		new Setting(containerEl)
+			.setName("Launch on start")
+			.setDesc("Open the cards view when Obsidian starts")
+			.addToggle((toggle) =>
+				toggle
+					.setValue(this.plugin.settings.launchOnStart)
+					.onChange(async (value) => {
+						this.plugin.settings.launchOnStart = value;
+						await this.plugin.saveSettings();
+					}),
+			);
+
+		new Setting(containerEl)
+			.setName("Reset settings")
+			.setDesc("Reset all settings to default")
+			.addButton((button) =>
+				button.setButtonText("Reset").onClick(async () => {
+					this.plugin.settings = DEFAULT_SETTINGS;
+					await this.plugin.saveSettings();
+					this.display();
+				}),
 			);
 	}
 }
