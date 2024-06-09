@@ -42,6 +42,7 @@
 		margin: 0;
 		transition-property: transform;
 		transition-duration: 0.4s;
+		transform: translate(0, 100vh);
 	}
 
 	.card.skip-transition {
