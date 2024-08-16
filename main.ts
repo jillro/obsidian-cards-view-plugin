@@ -57,6 +57,10 @@ export default class CardsViewPlugin extends Plugin {
 			}),
 		);
 
+		const excalidraw = (this.app as any).plugins.plugins[
+			"obsidian-excalidraw-plugin"
+		];
+
 		// 添加标签点击事件监听器
 		this.registerDomEvent(document, "click", (evt: MouseEvent) => {
 			if (this.settings.openCardsViewOnTagClick) {
@@ -73,6 +77,9 @@ export default class CardsViewPlugin extends Plugin {
 					if (textElement) {
 						const tagName = textElement.textContent?.trim();
 						console.log("tagName", tagName);
+						if (excalidraw && tagName === "excalidraw") {
+							return;
+						}
 						if (tagName) {
 							this.openTagInCardsView(tagName);
 							evt.preventDefault();
