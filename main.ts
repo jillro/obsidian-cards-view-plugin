@@ -1,4 +1,11 @@
-import { Plugin, WorkspaceLeaf, TFolder, TFile, Notice } from "obsidian";
+import {
+	Plugin,
+	WorkspaceLeaf,
+	TFolder,
+	TFile,
+	Notice,
+	MarkdownView,
+} from "obsidian";
 import {
 	type CardsViewSettings,
 	CardsViewSettingsTab,
@@ -49,6 +56,31 @@ export default class CardsViewPlugin extends Plugin {
 				}
 			}),
 		);
+
+		// 添加标签点击事件监听器
+		this.registerDomEvent(document, "click", (evt: MouseEvent) => {
+			if (this.settings.openCardsViewOnTagClick) {
+				const target = evt.target as HTMLElement;
+				console.log(
+					"registerDomEvent",
+					target,
+					target.classList.contains("tree-item-self"),
+				);
+
+				let tagElement = target.closest(".tree-item-self.tag-pane-tag");
+				if (tagElement) {
+					const textElement = tagElement.querySelector(".tree-item-inner-text");
+					if (textElement) {
+						const tagName = textElement.textContent?.trim();
+						console.log("tagName", tagName);
+						if (tagName) {
+							this.openTagInCardsView(tagName);
+							evt.preventDefault();
+						}
+					}
+				}
+			}
+		});
 	}
 
 	onunload() {}
@@ -83,7 +115,6 @@ export default class CardsViewPlugin extends Plugin {
 		}
 	}
 
-	// 新增方法：从标签打开卡片视图
 	async openTagInCardsView(tagName: string) {
 		try {
 			const files = await this.getFilesWithTag(tagName);
@@ -101,7 +132,6 @@ export default class CardsViewPlugin extends Plugin {
 		}
 	}
 
-	// 辅助方法：获取带有特定标签的所有文件
 	private async getFilesWithTag(tagName: string): Promise<TFile[]> {
 		const files: TFile[] = [];
 		for (const file of this.app.vault.getMarkdownFiles()) {
@@ -113,7 +143,6 @@ export default class CardsViewPlugin extends Plugin {
 		return files;
 	}
 
-	// 新增辅助方法：安全地获取错误消息
 	private getErrorMessage(error: unknown): string {
 		if (error instanceof Error) {
 			return error.message;
