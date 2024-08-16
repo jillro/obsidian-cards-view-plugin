@@ -4,11 +4,13 @@ import { App, Notice, PluginSettingTab, Setting } from "obsidian";
 export interface CardsViewSettings {
 	minCardWidth: number;
 	launchOnStart: boolean;
+	openCardsViewOnTagClick: boolean; // New setting
 }
 
 export const DEFAULT_SETTINGS: CardsViewSettings = {
 	minCardWidth: 200,
 	launchOnStart: false,
+	openCardsViewOnTagClick: false, // Default value for new setting
 };
 
 export class CardsViewSettingsTab extends PluginSettingTab {
@@ -49,6 +51,18 @@ export class CardsViewSettingsTab extends PluginSettingTab {
 					.setValue(this.plugin.settings.launchOnStart)
 					.onChange(async (value) => {
 						this.plugin.settings.launchOnStart = value;
+						await this.plugin.saveSettings();
+					}),
+			);
+
+		new Setting(containerEl)
+			.setName("Open Cards View on Tag Click")
+			.setDesc("Open the cards view when clicking on a tag")
+			.addToggle((toggle) =>
+				toggle
+					.setValue(this.plugin.settings.openCardsViewOnTagClick)
+					.onChange(async (value) => {
+						this.plugin.settings.openCardsViewOnTagClick = value;
 						await this.plugin.saveSettings();
 					}),
 			);
