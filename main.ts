@@ -12,7 +12,7 @@ import {
 	DEFAULT_SETTINGS,
 } from "./settings";
 import { CardsViewPluginView, VIEW_TYPE } from "./view";
-import store from "./components/store";
+import store, { Sort } from "./components/store";
 
 export default class CardsViewPlugin extends Plugin {
 	settings: CardsViewSettings = Object.assign({}, DEFAULT_SETTINGS);
@@ -20,6 +20,19 @@ export default class CardsViewPlugin extends Plugin {
 	async onload() {
 		this.settings = Object.assign(this.settings, await this.loadData());
 		this.addSettingTab(new CardsViewSettingsTab(this.app, this));
+
+		// 初始化排序方式
+		store.sort.set(this.settings.defaultSort);
+
+		this.registerView(
+			VIEW_TYPE,
+			(leaf) =>
+				new CardsViewPluginView(
+					this.settings,
+					leaf,
+					this.saveSettings.bind(this),
+				),
+		);
 
 		this.addRibbonIcon("align-start-horizontal", "Card view", () => {
 			this.activateView();
@@ -32,11 +45,6 @@ export default class CardsViewPlugin extends Plugin {
 				this.activateView();
 			},
 		});
-
-		this.registerView(
-			VIEW_TYPE,
-			(leaf) => new CardsViewPluginView(this.settings, leaf),
-		);
 
 		this.app.workspace.onLayoutReady(() => {
 			if (this.settings.launchOnStart) {
@@ -118,7 +126,7 @@ export default class CardsViewPlugin extends Plugin {
 		const leaves = this.app.workspace.getLeavesOfType(VIEW_TYPE);
 		if (leaves.length > 0) {
 			const cardsView = leaves[0].view as CardsViewPluginView;
-			cardsView.updateFiles(files);
+			cardsView.updateFiles(files, this.settings.defaultSort);
 		}
 	}
 
@@ -129,7 +137,7 @@ export default class CardsViewPlugin extends Plugin {
 			const leaves = this.app.workspace.getLeavesOfType(VIEW_TYPE);
 			if (leaves.length > 0) {
 				const cardsView = leaves[0].view as CardsViewPluginView;
-				cardsView.updateFiles(files);
+				cardsView.updateFiles(files, this.settings.defaultSort);
 			} else {
 				new Notice("Unable to open Cards View");
 			}

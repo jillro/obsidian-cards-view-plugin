@@ -1,32 +1,39 @@
 <script lang="ts">
-	import {debounce, Menu, SearchComponent, setIcon, TFile} from "obsidian";
-	import {afterUpdate, onMount} from "svelte";
+	import { debounce, Menu, SearchComponent, setIcon, TFile } from "obsidian";
+	import { afterUpdate, onMount } from "svelte";
 	import MiniMasonry from "minimasonry";
 
-	import type {CardsViewSettings} from "../settings";
+	import type { CardsViewSettings } from "../settings";
 	import Card from "./Card.svelte";
-	import {displayedFiles, searchQuery, skipNextTransition, Sort, sort, viewIsVisible} from "./store";
+	import {
+		displayedFiles,
+		searchQuery,
+		skipNextTransition,
+		Sort,
+		sort,
+		viewIsVisible,
+	} from "./store";
 
 	export let settings: CardsViewSettings;
-
 	export let renderFile: (file: TFile, el: HTMLElement) => Promise<void>;
 	export let openFile: (file: TFile) => void;
 	export let trashFile: (file: TFile) => Promise<void>;
+	export let saveSettings: () => Promise<void>;
 
 	let notesGrid: MiniMasonry;
 	let viewContent: HTMLElement;
 	let cardsContainer: HTMLElement;
-	let columns: number
+	let columns: number;
 
 	const sortIcon = (element: HTMLElement) => {
 		setIcon(element, "arrow-down-wide-narrow");
-	}
+	};
 
 	const searchInput = (element: HTMLElement) => {
-		(new SearchComponent(element)).onChange((value) => {
-			$searchQuery =value;
+		new SearchComponent(element).onChange((value) => {
+			$searchQuery = value;
 		});
-	}
+	};
 
 	function sortMenu(event: MouseEvent) {
 		const sortMenu = new Menu();
@@ -35,6 +42,8 @@
 			item.setChecked($sort == Sort.Created);
 			item.onClick(async () => {
 				$sort = Sort.Created;
+				settings.defaultSort = Sort.Created;
+				await saveSettings();
 			});
 		});
 		sortMenu.addItem((item) => {
@@ -42,12 +51,15 @@
 			item.setChecked($sort == Sort.Modified);
 			item.onClick(async () => {
 				$sort = Sort.Modified;
+				settings.defaultSort = Sort.Modified;
+				await saveSettings();
 			});
-		})
+		});
 		sortMenu.showAtMouseEvent(event);
 	}
 
 	onMount(() => {
+		$sort = settings.defaultSort;
 		columns = Math.floor(viewContent.clientWidth / settings.minCardWidth);
 		notesGrid = new MiniMasonry({
 			container: cardsContainer,
@@ -60,28 +72,34 @@
 
 		return () => {
 			notesGrid.destroy();
-		}
+		};
 	});
 
-	afterUpdate(debounce(async () => {
-		if (!$viewIsVisible) {
-			$skipNextTransition = true;
-			return;
-		}
+	afterUpdate(
+		debounce(async () => {
+			if (!$viewIsVisible) {
+				$skipNextTransition = true;
+				return;
+			}
 
-		notesGrid.layout();
-		$skipNextTransition = false;
-	}));
+			notesGrid.layout();
+			$skipNextTransition = false;
+		}),
+	);
 </script>
 
 <div class="action-bar" bind:this={viewContent}>
 	<div use:searchInput />
 	<button class="clickable-icon sort-button" use:sortIcon on:click={sortMenu} />
 </div>
-<div class="cards-container" bind:this={cardsContainer} style:--columns={columns}>
+<div
+	class="cards-container"
+	bind:this={cardsContainer}
+	style:--columns={columns}
+>
 	{#each $displayedFiles as file (file.path + file.stat.mtime)}
 		<Card
-			file={file}
+			{file}
 			renderFile={(el) => renderFile(file, el)}
 			openFile={() => openFile(file)}
 			trashFile={() => trashFile(file)}

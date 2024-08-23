@@ -1,16 +1,19 @@
 import CardsViewPlugin from "./main";
 import { App, Notice, PluginSettingTab, Setting } from "obsidian";
+import { Sort } from "./components/store";
 
 export interface CardsViewSettings {
 	minCardWidth: number;
 	launchOnStart: boolean;
-	openCardsViewOnTagClick: boolean; // New setting
+	openCardsViewOnTagClick: boolean;
+	defaultSort: Sort;
 }
 
 export const DEFAULT_SETTINGS: CardsViewSettings = {
 	minCardWidth: 200,
 	launchOnStart: false,
-	openCardsViewOnTagClick: false, // Default value for new setting
+	openCardsViewOnTagClick: false,
+	defaultSort: Sort.Modified,
 };
 
 export class CardsViewSettingsTab extends PluginSettingTab {
