@@ -113,7 +113,7 @@ export class CardsViewPluginView extends ItemView {
 		});
 	}
 
-	updateFiles(files: TFile[], sortType: Sort = Sort.Modified) {
+	updateFiles(files: TFile[], sortType: Sort = Sort.EditedDesc) {
 		store.files.set(files);
 		store.displayedCount.set(50);
 		store.searchQuery.set("");
@@ -128,6 +128,6 @@ export class CardsViewPluginView extends ItemView {
 		store.viewIsVisible.set(false);
 		store.searchQuery.set("");
 		store.displayedCount.set(50);
-		store.sort.set(Sort.Modified);
+		store.sort.set(Sort.EditedDesc);
 	}
 }

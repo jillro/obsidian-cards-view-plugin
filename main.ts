@@ -22,7 +22,7 @@ export default class CardsViewPlugin extends Plugin {
 		this.addSettingTab(new CardsViewSettingsTab(this.app, this));
 
 		// 初始化排序方式
-		store.sort.set(this.settings.defaultSort);
+		store.sort.set(Sort.CreatedDesc);
 
 		this.registerView(
 			VIEW_TYPE,
@@ -126,7 +126,7 @@ export default class CardsViewPlugin extends Plugin {
 		const leaves = this.app.workspace.getLeavesOfType(VIEW_TYPE);
 		if (leaves.length > 0) {
 			const cardsView = leaves[0].view as CardsViewPluginView;
-			cardsView.updateFiles(files, this.settings.defaultSort);
+			cardsView.updateFiles(files, Sort.CreatedDesc);
 		}
 	}
 
@@ -137,7 +137,7 @@ export default class CardsViewPlugin extends Plugin {
 			const leaves = this.app.workspace.getLeavesOfType(VIEW_TYPE);
 			if (leaves.length > 0) {
 				const cardsView = leaves[0].view as CardsViewPluginView;
-				cardsView.updateFiles(files, this.settings.defaultSort);
+				cardsView.updateFiles(files, Sort.CreatedDesc);
 			} else {
 				new Notice("Unable to open Cards View");
 			}

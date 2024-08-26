@@ -37,24 +37,71 @@
 
 	function sortMenu(event: MouseEvent) {
 		const sortMenu = new Menu();
+
+		// 文件名排序
 		sortMenu.addItem((item) => {
-			item.setTitle("Last created");
-			item.setChecked($sort == Sort.Created);
+			item.setTitle("Title (A-Z)");
+			item.setChecked($sort == Sort.NameAsc);
 			item.onClick(async () => {
-				$sort = Sort.Created;
-				settings.defaultSort = Sort.Created;
+				$sort = Sort.NameAsc;
+				settings.defaultSort = Sort.NameAsc;
 				await saveSettings();
 			});
 		});
 		sortMenu.addItem((item) => {
-			item.setTitle("Last modified");
-			item.setChecked($sort == Sort.Modified);
+			item.setTitle("Title (Z-A)");
+			item.setChecked($sort == Sort.NameDesc);
 			item.onClick(async () => {
-				$sort = Sort.Modified;
-				settings.defaultSort = Sort.Modified;
+				$sort = Sort.NameDesc;
+				settings.defaultSort = Sort.NameDesc;
 				await saveSettings();
 			});
 		});
+
+		sortMenu.addSeparator();
+
+		// 编辑时间排序
+		sortMenu.addItem((item) => {
+			item.setTitle("Edited (Newest First)");
+			item.setChecked($sort == Sort.EditedDesc);
+			item.onClick(async () => {
+				$sort = Sort.EditedDesc;
+				settings.defaultSort = Sort.EditedDesc;
+				await saveSettings();
+			});
+		});
+		sortMenu.addItem((item) => {
+			item.setTitle("Edited (Oldest First)");
+			item.setChecked($sort == Sort.EditedAsc);
+			item.onClick(async () => {
+				$sort = Sort.EditedAsc;
+				settings.defaultSort = Sort.EditedAsc;
+				await saveSettings();
+			});
+		});
+
+		sortMenu.addSeparator();
+
+		// 创建时间排序
+		sortMenu.addItem((item) => {
+			item.setTitle("Created (Newest First)");
+			item.setChecked($sort == Sort.CreatedDesc);
+			item.onClick(async () => {
+				$sort = Sort.CreatedDesc;
+				settings.defaultSort = Sort.CreatedDesc;
+				await saveSettings();
+			});
+		});
+		sortMenu.addItem((item) => {
+			item.setTitle("Created (Oldest First)");
+			item.setChecked($sort == Sort.CreatedAsc);
+			item.onClick(async () => {
+				$sort = Sort.CreatedAsc;
+				settings.defaultSort = Sort.CreatedAsc;
+				await saveSettings();
+			});
+		});
+
 		sortMenu.showAtMouseEvent(event);
 	}
 

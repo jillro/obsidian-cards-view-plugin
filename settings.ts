@@ -13,7 +13,7 @@ export const DEFAULT_SETTINGS: CardsViewSettings = {
 	minCardWidth: 200,
 	launchOnStart: false,
 	openCardsViewOnTagClick: false,
-	defaultSort: Sort.Modified,
+	defaultSort: Sort.CreatedDesc,
 };
 
 export class CardsViewSettingsTab extends PluginSettingTab {
