@@ -1035,7 +1035,8 @@ var store_default = {
 var DEFAULT_SETTINGS = {
   minCardWidth: 200,
   launchOnStart: false,
-  openCardsViewOnTagClick: false,
+  openCardsViewOnTagTreeClick: false,
+  openCardsViewOnInlineTagClick: false,
   defaultSort: "Created (Newest First)" /* CreatedDesc */
 };
 var CardsViewSettingsTab = class extends import_obsidian2.PluginSettingTab {
@@ -1046,30 +1047,36 @@ var CardsViewSettingsTab = class extends import_obsidian2.PluginSettingTab {
   display() {
     const { containerEl } = this;
     containerEl.empty();
-    new import_obsidian2.Setting(containerEl).setName("Minimum card width").setDesc("Cards will not be smaller than this width (in pixels)").addText(
+    new import_obsidian2.Setting(containerEl).setName("\u6700\u5C0F\u5361\u7247\u5BBD\u5EA6").setDesc("\u5361\u7247\u7684\u6700\u5C0F\u5BBD\u5EA6\uFF08\u50CF\u7D20\uFF09").addText(
       (text2) => text2.setPlaceholder("200").setValue(this.plugin.settings.minCardWidth.toString()).onChange(async (value) => {
         if (isNaN(parseInt(value))) {
-          new import_obsidian2.Notice("Invalid number");
+          new import_obsidian2.Notice("\u65E0\u6548\u7684\u6570\u5B57");
           return;
         }
         this.plugin.settings.minCardWidth = parseInt(value);
         await this.plugin.saveSettings();
       })
     );
-    new import_obsidian2.Setting(containerEl).setName("Launch on start").setDesc("Open the cards view when Obsidian starts").addToggle(
+    new import_obsidian2.Setting(containerEl).setName("\u542F\u52A8\u65F6\u6253\u5F00").setDesc("Obsidian \u542F\u52A8\u65F6\u6253\u5F00\u5361\u7247\u89C6\u56FE").addToggle(
       (toggle) => toggle.setValue(this.plugin.settings.launchOnStart).onChange(async (value) => {
         this.plugin.settings.launchOnStart = value;
         await this.plugin.saveSettings();
       })
     );
-    new import_obsidian2.Setting(containerEl).setName("Open Cards View on Tag Click").setDesc("Open the cards view when clicking on a tag").addToggle(
-      (toggle) => toggle.setValue(this.plugin.settings.openCardsViewOnTagClick).onChange(async (value) => {
-        this.plugin.settings.openCardsViewOnTagClick = value;
+    new import_obsidian2.Setting(containerEl).setName("\u4ECE\u6807\u7B7E\u6811\u5355\u51FB\u6807\u7B7E\u6253\u5F00\u5361\u7247\u89C6\u56FE").setDesc("\u5F53\u5728\u6807\u7B7E\u6811\u4E2D\u70B9\u51FB\u6807\u7B7E\u65F6\u6253\u5F00\u5361\u7247\u89C6\u56FE").addToggle(
+      (toggle) => toggle.setValue(this.plugin.settings.openCardsViewOnTagTreeClick).onChange(async (value) => {
+        this.plugin.settings.openCardsViewOnTagTreeClick = value;
         await this.plugin.saveSettings();
       })
     );
-    new import_obsidian2.Setting(containerEl).setName("Reset settings").setDesc("Reset all settings to default").addButton(
-      (button) => button.setButtonText("Reset").onClick(async () => {
+    new import_obsidian2.Setting(containerEl).setName("\u4ECE\u9875\u9762\u4E2D\u70B9\u51FB\u6807\u7B7E\u6253\u5F00\u5361\u7247\u89C6\u56FE").setDesc("\u5F53\u5728\u9875\u9762\u5185\u5BB9\u4E2D\u70B9\u51FB\u6807\u7B7E\u65F6\u6253\u5F00\u5361\u7247\u89C6\u56FE").addToggle(
+      (toggle) => toggle.setValue(this.plugin.settings.openCardsViewOnInlineTagClick).onChange(async (value) => {
+        this.plugin.settings.openCardsViewOnInlineTagClick = value;
+        await this.plugin.saveSettings();
+      })
+    );
+    new import_obsidian2.Setting(containerEl).setName("\u91CD\u7F6E\u8BBE\u7F6E").setDesc("\u5C06\u6240\u6709\u8BBE\u7F6E\u91CD\u7F6E\u4E3A\u9ED8\u8BA4\u503C").addButton(
+      (button) => button.setButtonText("\u91CD\u7F6E").onClick(async () => {
         this.plugin.settings = DEFAULT_SETTINGS;
         await this.plugin.saveSettings();
         this.display();
@@ -2096,12 +2103,12 @@ var CardsViewPlugin2 = class extends import_obsidian6.Plugin {
         this.saveSettings.bind(this)
       )
     );
-    this.addRibbonIcon("align-start-horizontal", "Card view", () => {
+    this.addRibbonIcon("align-start-horizontal", "\u5361\u7247\u89C6\u56FE", () => {
       this.activateView();
     });
     this.addCommand({
       id: "cards-view-plugin",
-      name: "Open card view",
+      name: "\u6253\u5F00\u5361\u7247\u89C6\u56FE",
       callback: () => {
         this.activateView();
       }
@@ -2115,34 +2122,37 @@ var CardsViewPlugin2 = class extends import_obsidian6.Plugin {
       this.app.workspace.on("file-menu", (menu, file) => {
         if (file instanceof import_obsidian6.TFolder) {
           menu.addItem((item) => {
-            item.setTitle("Open Folder in Cards View").setIcon("documents").onClick(() => this.openAllFilesInFolder(file));
+            item.setTitle("\u5728\u5361\u7247\u89C6\u56FE\u4E2D\u6253\u5F00\u6587\u4EF6\u5939").setIcon("documents").onClick(() => this.openAllFilesInFolder(file));
           });
         }
       })
     );
-    const excalidraw = this.app.plugins.plugins["obsidian-excalidraw-plugin"];
     this.registerDomEvent(document, "click", (evt) => {
       var _a;
-      if (this.settings.openCardsViewOnTagClick) {
+      if (this.settings.openCardsViewOnTagTreeClick) {
         const target = evt.target;
-        console.log(
-          "registerDomEvent",
-          target,
-          target.classList.contains("tree-item-self")
-        );
         let tagElement = target.closest(".tree-item-self.tag-pane-tag");
         if (tagElement) {
           const textElement = tagElement.querySelector(".tree-item-inner-text");
           if (textElement) {
             const tagName = (_a = textElement.textContent) == null ? void 0 : _a.trim();
-            console.log("tagName", tagName);
-            if (excalidraw && tagName === "excalidraw") {
-              return;
-            }
             if (tagName) {
               this.openTagInCardsView(tagName);
               evt.preventDefault();
             }
+          }
+        }
+      }
+    });
+    this.registerDomEvent(document, "click", (evt) => {
+      var _a;
+      if (this.settings.openCardsViewOnInlineTagClick) {
+        const target = evt.target;
+        if (target.classList.contains("cm-hashtag-end") && target.closest(".cm-line")) {
+          const tagName = (_a = target.textContent) == null ? void 0 : _a.trim();
+          if (tagName) {
+            this.openTagInCardsView(tagName);
+            evt.preventDefault();
           }
         }
       }
@@ -2185,11 +2195,11 @@ var CardsViewPlugin2 = class extends import_obsidian6.Plugin {
         const cardsView = leaves[0].view;
         cardsView.updateFiles(files2, "Created (Newest First)" /* CreatedDesc */);
       } else {
-        new import_obsidian6.Notice("Unable to open Cards View");
+        new import_obsidian6.Notice("\u65E0\u6CD5\u6253\u5F00\u5361\u7247\u89C6\u56FE");
       }
     } catch (error) {
-      console.error("Error opening Cards View for tag:", tagName, error);
-      new import_obsidian6.Notice(`Error opening Cards View: ${this.getErrorMessage(error)}`);
+      console.error("\u6253\u5F00\u6807\u7B7E\u5361\u7247\u89C6\u56FE\u65F6\u51FA\u9519:", tagName, error);
+      new import_obsidian6.Notice(`\u6253\u5F00\u5361\u7247\u89C6\u56FE\u65F6\u51FA\u9519: ${this.getErrorMessage(error)}`);
     }
   }
   async getFilesWithTag(tagName) {
