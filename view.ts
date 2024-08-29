@@ -42,9 +42,31 @@ export class CardsViewPluginView extends ItemView {
 					await this.app.workspace.getLeaf("tab").openFile(file),
 				renderFile: async (file: TFile, el: HTMLElement) => {
 					const content = await this.app.vault.cachedRead(file);
-					const tenLines = content.split("\n").slice(0, 10).join("\n");
-					const summary = `${tenLines.length < 200 ? tenLines : content.slice(0, 200)}${content.length > 200 ? " ..." : ""}`;
-					await MarkdownRenderer.render(this.app, summary, el, file.path, this);
+
+					// 实现新的内容显示选项
+					let displayContent: string;
+					if (this.settings.contentDisplay === "all") {
+						// 显示所有内容
+						displayContent = content;
+					} else {
+						// 显示指定行数的内容
+						const lines = content.split("\n");
+						displayContent = lines
+							.slice(0, this.settings.contentDisplay)
+							.join("\n");
+						if (lines.length > this.settings.contentDisplay) {
+							displayContent += "\n...";
+						}
+					}
+
+					// 渲染内容
+					await MarkdownRenderer.render(
+						this.app,
+						displayContent,
+						el,
+						file.path,
+						this,
+					);
 				},
 				trashFile: async (file: TFile) => {
 					await this.app.vault.trash(file, true);

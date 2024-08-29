@@ -8,6 +8,8 @@ export interface CardsViewSettings {
 	openCardsViewOnTagTreeClick: boolean;
 	openCardsViewOnInlineTagClick: boolean;
 	defaultSort: Sort;
+	// 新增设置项：内容显示方式
+	contentDisplay: "all" | number;
 }
 
 export const DEFAULT_SETTINGS: CardsViewSettings = {
@@ -16,6 +18,8 @@ export const DEFAULT_SETTINGS: CardsViewSettings = {
 	openCardsViewOnTagTreeClick: false,
 	openCardsViewOnInlineTagClick: false,
 	defaultSort: Sort.CreatedDesc,
+	// 默认显示所有内容
+	contentDisplay: "all",
 };
 
 export class CardsViewSettingsTab extends PluginSettingTab {
@@ -83,6 +87,54 @@ export class CardsViewSettingsTab extends PluginSettingTab {
 						await this.plugin.saveSettings();
 					}),
 			);
+
+		// 添加新的设置项：内容显示方式
+		new Setting(containerEl)
+			.setName("卡片是否显示全部")
+			.setDesc("选择在每个卡片中显示多少内容")
+			.addDropdown((dropdown) =>
+				dropdown
+					.addOption("all", "显示所有内容")
+					.addOption("custom", "自定义行数")
+					.setValue(
+						this.plugin.settings.contentDisplay === "all" ? "all" : "custom",
+					)
+					.onChange(async (value) => {
+						if (value === "all") {
+							this.plugin.settings.contentDisplay = "all";
+						} else {
+							// 如果选择 '自定义行数'，默认设置为10行（如果之前未设置）
+							this.plugin.settings.contentDisplay =
+								typeof this.plugin.settings.contentDisplay === "number"
+									? this.plugin.settings.contentDisplay
+									: 10;
+						}
+						await this.plugin.saveSettings();
+						// 刷新显示以显示/隐藏行数输入框
+						this.display();
+					}),
+			);
+
+		// 仅当选择 '自定义行数' 时显示行数输入框
+		if (typeof this.plugin.settings.contentDisplay === "number") {
+			new Setting(containerEl)
+				.setName("显示行数")
+				.setDesc("输入要在每个卡片中显示的行数")
+				.addText((text) =>
+					text
+						.setPlaceholder("10")
+						.setValue(this.plugin.settings.contentDisplay.toString())
+						.onChange(async (value) => {
+							const numLines = parseInt(value);
+							if (isNaN(numLines) || numLines < 1) {
+								new Notice("请输入大于0的有效数字");
+								return;
+							}
+							this.plugin.settings.contentDisplay = numLines;
+							await this.plugin.saveSettings();
+						}),
+				);
+		}
 
 		new Setting(containerEl)
 			.setName("重置设置")
