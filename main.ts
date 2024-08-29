@@ -21,7 +21,6 @@ export default class CardsViewPlugin extends Plugin {
 		this.settings = Object.assign(this.settings, await this.loadData());
 		this.addSettingTab(new CardsViewSettingsTab(this.app, this));
 
-		// 初始化排序方式
 		store.sort.set(Sort.CreatedDesc);
 
 		this.registerView(
@@ -34,13 +33,13 @@ export default class CardsViewPlugin extends Plugin {
 				),
 		);
 
-		this.addRibbonIcon("align-start-horizontal", "Card view", () => {
+		this.addRibbonIcon("align-start-horizontal", "卡片视图", () => {
 			this.activateView();
 		});
 
 		this.addCommand({
 			id: "cards-view-plugin",
-			name: "Open card view",
+			name: "打开卡片视图",
 			callback: () => {
 				this.activateView();
 			},
@@ -57,7 +56,7 @@ export default class CardsViewPlugin extends Plugin {
 				if (file instanceof TFolder) {
 					menu.addItem((item) => {
 						item
-							.setTitle("Open Folder in Cards View")
+							.setTitle("在卡片视图中打开文件夹")
 							.setIcon("documents")
 							.onClick(() => this.openAllFilesInFolder(file));
 					});
@@ -65,33 +64,36 @@ export default class CardsViewPlugin extends Plugin {
 			}),
 		);
 
-		const excalidraw = (this.app as any).plugins.plugins[
-			"obsidian-excalidraw-plugin"
-		];
-
-		// 添加标签点击事件监听器
+		// 标签树点击事件
 		this.registerDomEvent(document, "click", (evt: MouseEvent) => {
-			if (this.settings.openCardsViewOnTagClick) {
+			if (this.settings.openCardsViewOnTagTreeClick) {
 				const target = evt.target as HTMLElement;
-				console.log(
-					"registerDomEvent",
-					target,
-					target.classList.contains("tree-item-self"),
-				);
-
 				let tagElement = target.closest(".tree-item-self.tag-pane-tag");
 				if (tagElement) {
 					const textElement = tagElement.querySelector(".tree-item-inner-text");
 					if (textElement) {
 						const tagName = textElement.textContent?.trim();
-						console.log("tagName", tagName);
-						if (excalidraw && tagName === "excalidraw") {
-							return;
-						}
 						if (tagName) {
 							this.openTagInCardsView(tagName);
 							evt.preventDefault();
 						}
+					}
+				}
+			}
+		});
+
+		// 页面内标签点击事件
+		this.registerDomEvent(document, "click", (evt: MouseEvent) => {
+			if (this.settings.openCardsViewOnInlineTagClick) {
+				const target = evt.target as HTMLElement;
+				if (
+					target.classList.contains("cm-hashtag-end") &&
+					target.closest(".cm-line")
+				) {
+					const tagName = target.textContent?.trim();
+					if (tagName) {
+						this.openTagInCardsView(tagName);
+						evt.preventDefault();
 					}
 				}
 			}
@@ -139,11 +141,11 @@ export default class CardsViewPlugin extends Plugin {
 				const cardsView = leaves[0].view as CardsViewPluginView;
 				cardsView.updateFiles(files, Sort.CreatedDesc);
 			} else {
-				new Notice("Unable to open Cards View");
+				new Notice("无法打开卡片视图");
 			}
 		} catch (error) {
-			console.error("Error opening Cards View for tag:", tagName, error);
-			new Notice(`Error opening Cards View: ${this.getErrorMessage(error)}`);
+			console.error("打开标签卡片视图时出错:", tagName, error);
+			new Notice(`打开卡片视图时出错: ${this.getErrorMessage(error)}`);
 		}
 	}
 
