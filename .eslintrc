@@ -9,17 +9,26 @@
       "eslint:recommended",
       "plugin:@typescript-eslint/eslint-recommended",
       "plugin:@typescript-eslint/recommended",
-      "plugin:svelte/recommended",
-	  "prettier"
-    ], 
+      "plugin:svelte/prettier"
+    ],
     "parserOptions": {
         "sourceType": "module"
     },
     "rules": {
+      "no-undef": "off",
       "no-unused-vars": "off",
       "@typescript-eslint/no-unused-vars": ["error", { "args": "none" }],
       "@typescript-eslint/ban-ts-comment": "off",
       "no-prototype-builtins": "off",
       "@typescript-eslint/no-empty-function": "off"
-    } 
+    },
+    "overrides": [
+      {
+        "files": ["*.svelte"],
+        "parser": "svelte-eslint-parser",
+        "parserOptions": {
+          "parser": "@typescript-eslint/parser"
+        }
+      }
+    ]
   }
