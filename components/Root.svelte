@@ -1,11 +1,18 @@
 <script lang="ts">
-	import {debounce, Menu, SearchComponent, setIcon, TFile} from "obsidian";
-	import {afterUpdate, onMount} from "svelte";
+	import { debounce, Menu, SearchComponent, setIcon, TFile } from "obsidian";
+	import { afterUpdate, onMount } from "svelte";
 	import MiniMasonry from "minimasonry";
 
-	import type {CardsViewSettings} from "../settings";
+	import type { CardsViewSettings } from "../settings";
 	import Card from "./Card.svelte";
-	import {displayedFiles, searchQuery, skipNextTransition, Sort, sort, viewIsVisible} from "./store";
+	import {
+		displayedFiles,
+		searchQuery,
+		skipNextTransition,
+		Sort,
+		sort,
+		viewIsVisible
+	} from "./store";
 
 	export let settings: CardsViewSettings;
 
@@ -16,17 +23,17 @@
 	let notesGrid: MiniMasonry;
 	let viewContent: HTMLElement;
 	let cardsContainer: HTMLElement;
-	let columns: number
+	let columns: number;
 
 	const sortIcon = (element: HTMLElement) => {
 		setIcon(element, "arrow-down-wide-narrow");
-	}
+	};
 
 	const searchInput = (element: HTMLElement) => {
-		(new SearchComponent(element)).onChange((value) => {
-			$searchQuery =value;
+		new SearchComponent(element).onChange((value) => {
+			$searchQuery = value;
 		});
-	}
+	};
 
 	function sortMenu(event: MouseEvent) {
 		const sortMenu = new Menu();
@@ -43,7 +50,7 @@
 			item.onClick(async () => {
 				$sort = Sort.Modified;
 			});
-		})
+		});
 		sortMenu.showAtMouseEvent(event);
 	}
 
@@ -60,28 +67,38 @@
 
 		return () => {
 			notesGrid.destroy();
-		}
+		};
 	});
 
-	afterUpdate(debounce(async () => {
-		if (!$viewIsVisible) {
-			$skipNextTransition = true;
-			return;
-		}
+	afterUpdate(
+		debounce(async () => {
+			if (!$viewIsVisible) {
+				$skipNextTransition = true;
+				return;
+			}
 
-		notesGrid.layout();
-		$skipNextTransition = false;
-	}));
+			notesGrid.layout();
+			$skipNextTransition = false;
+		}),
+	);
 </script>
 
 <div class="action-bar" bind:this={viewContent}>
 	<div use:searchInput />
-	<button class="clickable-icon sort-button" use:sortIcon on:click={sortMenu} />
+	<button
+		class="clickable-icon sort-button"
+		use:sortIcon
+		on:click={sortMenu}
+	/>
 </div>
-<div class="cards-container" bind:this={cardsContainer} style:--columns={columns}>
+<div
+	class="cards-container"
+	bind:this={cardsContainer}
+	style:--columns={columns}
+>
 	{#each $displayedFiles as file (file.path + file.stat.mtime)}
 		<Card
-			file={file}
+			{file}
 			renderFile={(el) => renderFile(file, el)}
 			openFile={() => openFile(file)}
 			trashFile={() => trashFile(file)}
