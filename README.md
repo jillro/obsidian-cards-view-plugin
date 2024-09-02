@@ -1,7 +1,3 @@
-**I'm a a trans right advocate in France, and a trans woman myself. I am currently very busy fighting a very transphobic bill
-that the french equivalent of the Republicans are trying to pass. As soon as the vote has passed, I will read all issues and
-get back to work on this plugin.** [You can donate to my organization](https://toutesdesfemmes.fr/don/) if you want to help. 
-
 # Obsidian Cards View Plugin
 
 This is a plugin for Obsidian.md that displays a card view of your notes.
