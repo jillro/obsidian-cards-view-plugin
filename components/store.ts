@@ -5,6 +5,7 @@ export enum Sort {
   Created = "ctime",
   Modified = "mtime",
 }
+
 export const files = writable<TFile[]>([]);
 
 export const sort = writable<Sort>(Sort.Modified);
@@ -55,6 +56,8 @@ export const displayedFiles = derived(
 export const viewIsVisible = writable(false);
 export const skipNextTransition = writable(true);
 
+export const tags = writable<string[]>([]);
+
 export default {
   files,
   sort,
@@ -64,4 +67,5 @@ export default {
   displayedFiles,
   viewIsVisible,
   skipNextTransition,
+  tags,
 };

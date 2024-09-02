@@ -1,4 +1,6 @@
 import {
+  type CachedMetadata,
+  getAllTags,
   ItemView,
   MarkdownRenderer,
   TAbstractFile,
@@ -29,28 +31,33 @@ export class CardsViewPluginView extends ItemView {
     return "Cards View";
   }
 
+  /**
+   * Returns all tags in the vault sorted by descending frequency
+   */
+  async getTags() {
+    const tags = get(store.displayedFiles)
+      .map(
+        (file) =>
+          getAllTags(
+            this.app.metadataCache.getFileCache(file) as CachedMetadata,
+          ) || [],
+      )
+      .flat();
+
+    const tagCounts = tags.reduce(
+      (acc, tag) => {
+        acc[tag] = (acc[tag] || 0) + 1;
+        return acc;
+      },
+      {} as Record<string, number>,
+    );
+
+    return Object.keys(tagCounts).sort((a, b) => tagCounts[b] - tagCounts[a]);
+  }
+
   async onOpen() {
     const viewContent = this.containerEl.children[1];
     store.files.set(this.app.vault.getMarkdownFiles());
-
-    this.svelteRoot = new Root({
-      props: {
-        settings: this.settings,
-        openFile: async (file: TFile) =>
-          await this.app.workspace.getLeaf("tab").openFile(file),
-        renderFile: async (file: TFile, el: HTMLElement) => {
-          const content = await this.app.vault.cachedRead(file);
-          // get first 10 lines of the file
-          const tenLines = content.split("\n").slice(0, 10).join("\n");
-          const summary = `${tenLines.length < 200 ? tenLines : content.slice(0, 200)}${content.length > 200 ? " ..." : ""}`;
-          await MarkdownRenderer.render(this.app, summary, el, file.path, this);
-        },
-        trashFile: async (file: TFile) => {
-          await this.app.vault.trash(file, true);
-        },
-      },
-      target: viewContent,
-    });
     this.registerEvent(
       this.app.vault.on("create", async (file: TAbstractFile) => {
         if (file instanceof TFile && file.extension === "md") {
@@ -88,6 +95,35 @@ export class CardsViewPluginView extends ItemView {
         },
       ),
     );
+
+    store.tags.set(await this.getTags());
+    store.displayedFiles.subscribe(async () => {
+      store.tags.set(await this.getTags());
+    });
+    this.registerEvent(
+      this.app.metadataCache.on("resolved", async () =>
+        store.tags.set(await this.getTags()),
+      ),
+    );
+
+    this.svelteRoot = new Root({
+      props: {
+        settings: this.settings,
+        openFile: async (file: TFile) =>
+          await this.app.workspace.getLeaf("tab").openFile(file),
+        renderFile: async (file: TFile, el: HTMLElement) => {
+          const content = await this.app.vault.cachedRead(file);
+          // get first 10 lines of the file
+          const tenLines = content.split("\n").slice(0, 10).join("\n");
+          const summary = `${tenLines.length < 200 ? tenLines : content.slice(0, 200)}${content.length > 200 ? " ..." : ""}`;
+          await MarkdownRenderer.render(this.app, summary, el, file.path, this);
+        },
+        trashFile: async (file: TFile) => {
+          await this.app.vault.trash(file, true);
+        },
+      },
+      target: viewContent,
+    });
 
     // On scroll 80% of viewContent, load more cards
     viewContent.addEventListener("scroll", async () => {
