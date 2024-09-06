@@ -1,6 +1,4 @@
 import {
-  type CachedMetadata,
-  getAllTags,
   ItemView,
   MarkdownRenderer,
   TAbstractFile,
