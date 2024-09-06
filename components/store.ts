@@ -1,4 +1,10 @@
-import { prepareFuzzySearch, TFile } from "obsidian";
+import {
+  type CachedMetadata,
+  getAllTags,
+  MetadataCache,
+  prepareFuzzySearch,
+  TFile,
+} from "obsidian";
 import { derived, get, writable } from "svelte/store";
 
 export enum Sort {
@@ -6,6 +12,7 @@ export enum Sort {
   Modified = "mtime",
 }
 
+export const appCache = writable<MetadataCache>();
 export const files = writable<TFile[]>([]);
 
 export const sort = writable<Sort>(Sort.Modified);
@@ -18,8 +25,8 @@ export const preparedSearch = derived(searchQuery, ($searchQuery) =>
   $searchQuery ? prepareFuzzySearch($searchQuery) : null,
 );
 export const searchResultFiles = derived(
-  [preparedSearch, sortedFiles],
-  ([$preparedSearch, $sortedFiles], set) => {
+  [preparedSearch, sortedFiles, appCache],
+  ([$preparedSearch, $sortedFiles, $appCache], set) => {
     if ($preparedSearch == null) {
       set($sortedFiles);
       return;
@@ -28,16 +35,23 @@ export const searchResultFiles = derived(
     Promise.all(
       $sortedFiles.map(async (file) => {
         const content = await file.vault.cachedRead(file);
-        return [$preparedSearch(content), $preparedSearch(file.name)];
+        const tags =
+          getAllTags($appCache.getFileCache(file) as CachedMetadata) || [];
+        return [
+          $preparedSearch(content),
+          $preparedSearch(file.name),
+          $preparedSearch(`#${tags.join(" #")}`),
+        ];
       }),
     ).then((searchResults) => {
       set(
         $sortedFiles.filter((file, index) => {
-          const [contentMatch, nameMatch] = searchResults[index];
+          const [contentMatch, nameMatch, tagsMatch] = searchResults[index];
 
           return (
             (contentMatch && contentMatch.score > -2) ||
-            (nameMatch && nameMatch.score > -2)
+            (nameMatch && nameMatch.score > -2) ||
+            (tagsMatch && tagsMatch.score > -2)
           );
         }),
       );
@@ -56,7 +70,27 @@ export const displayedFiles = derived(
 export const viewIsVisible = writable(false);
 export const skipNextTransition = writable(true);
 
-export const tags = writable<string[]>([]);
+export const tags = derived(
+  [displayedFiles, appCache],
+  ([$displayedFiles, $appCache]) => {
+    const tags = $displayedFiles
+      .map(
+        (file) =>
+          getAllTags($appCache.getFileCache(file) as CachedMetadata) || [],
+      )
+      .flat();
+
+    const tagCounts = tags.reduce(
+      (acc, tag) => {
+        acc[tag] = (acc[tag] || 0) + 1;
+        return acc;
+      },
+      {} as Record<string, number>,
+    );
+
+    return Object.keys(tagCounts).sort((a, b) => tagCounts[b] - tagCounts[a]);
+  },
+);
 
 export default {
   files,
@@ -68,4 +102,5 @@ export default {
   viewIsVisible,
   skipNextTransition,
   tags,
+  appCache,
 };

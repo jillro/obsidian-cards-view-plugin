@@ -31,32 +31,16 @@ export class CardsViewPluginView extends ItemView {
     return "Cards View";
   }
 
-  /**
-   * Returns all tags in the vault sorted by descending frequency
-   */
-  async getTags() {
-    const tags = get(store.displayedFiles)
-      .map(
-        (file) =>
-          getAllTags(
-            this.app.metadataCache.getFileCache(file) as CachedMetadata,
-          ) || [],
-      )
-      .flat();
-
-    const tagCounts = tags.reduce(
-      (acc, tag) => {
-        acc[tag] = (acc[tag] || 0) + 1;
-        return acc;
-      },
-      {} as Record<string, number>,
-    );
-
-    return Object.keys(tagCounts).sort((a, b) => tagCounts[b] - tagCounts[a]);
-  }
-
   async onOpen() {
     const viewContent = this.containerEl.children[1];
+
+    store.appCache.set(this.app.metadataCache);
+    this.registerEvent(
+      this.app.metadataCache.on("resolved", async () =>
+        store.appCache.update(() => this.app.metadataCache),
+      ),
+    );
+
     store.files.set(this.app.vault.getMarkdownFiles());
     this.registerEvent(
       this.app.vault.on("create", async (file: TAbstractFile) => {
@@ -93,16 +77,6 @@ export class CardsViewPluginView extends ItemView {
             );
           }
         },
-      ),
-    );
-
-    store.tags.set(await this.getTags());
-    store.displayedFiles.subscribe(async () => {
-      store.tags.set(await this.getTags());
-    });
-    this.registerEvent(
-      this.app.metadataCache.on("resolved", async () =>
-        store.tags.set(await this.getTags()),
       ),
     );
 
