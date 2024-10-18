@@ -13,13 +13,8 @@
     Sort,
     sort,
     viewIsVisible,
+    settings,
   } from "./store";
-
-  export let settings: CardsViewSettings;
-
-  export let renderFile: (file: TFile, el: HTMLElement) => Promise<void>;
-  export let openFile: (file: TFile) => void;
-  export let trashFile: (file: TFile) => Promise<void>;
 
   let notesGrid: MiniMasonry;
   let viewContent: HTMLElement;
@@ -60,10 +55,10 @@
   }
 
   onMount(() => {
-    columns = Math.floor(viewContent.clientWidth / settings.minCardWidth);
+    columns = Math.floor(viewContent.clientWidth / $settings.minCardWidth);
     notesGrid = new MiniMasonry({
       container: cardsContainer,
-      baseWidth: settings.minCardWidth,
+      baseWidth: $settings.minCardWidth,
       gutter: 20,
       surroundingGutter: false,
       ultimateGutter: 20,
@@ -107,13 +102,7 @@
   style:--columns={columns}
 >
   {#each $displayedFiles as file (file.path + file.stat.mtime)}
-    <Card
-      {file}
-      renderFile={(el) => renderFile(file, el)}
-      openFile={() => openFile(file)}
-      trashFile={() => trashFile(file)}
-      on:loaded={() => notesGrid.layout()}
-    />
+    <Card {file} on:loaded={() => notesGrid.layout()} />
   {/each}
 </div>
 

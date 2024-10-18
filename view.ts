@@ -1,10 +1,4 @@
-import {
-  ItemView,
-  MarkdownRenderer,
-  TAbstractFile,
-  TFile,
-  WorkspaceLeaf,
-} from "obsidian";
+import { ItemView, TAbstractFile, TFile, WorkspaceLeaf } from "obsidian";
 import type { CardsViewSettings } from "./settings";
 import Root from "./components/Root.svelte";
 import store, { Sort } from "./components/store";
@@ -31,6 +25,10 @@ export class CardsViewPluginView extends ItemView {
 
   async onOpen() {
     const viewContent = this.containerEl.children[1];
+
+    store.app.set(this.app);
+    store.view.set(this);
+    store.settings.set(this.settings);
 
     store.appCache.set(this.app.metadataCache);
     this.registerEvent(
@@ -79,21 +77,6 @@ export class CardsViewPluginView extends ItemView {
     );
 
     this.svelteRoot = new Root({
-      props: {
-        settings: this.settings,
-        openFile: async (file: TFile) =>
-          await this.app.workspace.getLeaf("tab").openFile(file),
-        renderFile: async (file: TFile, el: HTMLElement) => {
-          const content = await this.app.vault.cachedRead(file);
-          // get first 10 lines of the file
-          const tenLines = content.split("\n").slice(0, 10).join("\n");
-          const summary = `${tenLines.length < 200 ? tenLines : content.slice(0, 200)}${content.length > 200 ? " ..." : ""}`;
-          await MarkdownRenderer.render(this.app, summary, el, file.path, this);
-        },
-        trashFile: async (file: TFile) => {
-          await this.app.vault.trash(file, true);
-        },
-      },
       target: viewContent,
     });
 

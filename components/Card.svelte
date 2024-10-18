@@ -1,14 +1,26 @@
 <script lang="ts">
-  import { setIcon, TFile } from "obsidian";
+  import { MarkdownRenderer, setIcon, TFile } from "obsidian";
   import { createEventDispatcher, onMount } from "svelte";
-  import { skipNextTransition } from "./store";
+  import { skipNextTransition, app, view } from "./store";
 
   export let file: TFile;
-  export let openFile: () => void;
-  export let renderFile: (el: HTMLElement) => Promise<void>;
-  export let trashFile: () => void;
 
   let contentDiv: HTMLElement;
+
+  const renderFile = async (el: HTMLElement): Promise<void> => {
+    const content = await file.vault.cachedRead(file);
+    // get first 10 lines of the file
+    const tenLines = content.split("\n").slice(0, 10).join("\n");
+    const summary = `${tenLines.length < 200 ? tenLines : content.slice(0, 200)}${content.length > 200 ? " ..." : ""}`;
+    await MarkdownRenderer.render($app, summary, el, file.path, $view);
+  };
+
+  const trashFile = async () => {
+    await file.vault.trash(file, true);
+  };
+
+  const openFile = async () =>
+    await $app.workspace.getLeaf("tab").openFile(file);
 
   const trashIcon = (element: HTMLElement) => setIcon(element, "trash");
   const folderIcon = (element: HTMLElement) => setIcon(element, "folder");

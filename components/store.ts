@@ -1,17 +1,23 @@
 import {
+  type App,
   type CachedMetadata,
   getAllTags,
+  ItemView,
   MetadataCache,
   prepareFuzzySearch,
   TFile,
 } from "obsidian";
 import { derived, get, writable } from "svelte/store";
+import type { CardsViewSettings } from "../settings";
 
 export enum Sort {
   Created = "ctime",
   Modified = "mtime",
 }
 
+export const app = writable<App>();
+export const view = writable<ItemView>();
+export const settings = writable<CardsViewSettings>();
 export const appCache = writable<MetadataCache>();
 export const files = writable<TFile[]>([]);
 
@@ -102,5 +108,8 @@ export default {
   viewIsVisible,
   skipNextTransition,
   tags,
+  app,
+  view,
+  settings,
   appCache,
 };

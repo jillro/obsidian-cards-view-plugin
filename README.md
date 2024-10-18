@@ -1,4 +1,4 @@
-# Obsidian Cards View Plugin
+# Cards View
 
 This is a plugin for Obsidian.md that displays a card view of your notes.
 

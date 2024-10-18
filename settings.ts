@@ -1,14 +1,22 @@
 import CardsViewPlugin from "./main";
 import { App, Notice, PluginSettingTab, Setting } from "obsidian";
 
+export enum TitleDisplayMode {
+  Both = "Both title and filename",
+  Title = "Title",
+  Filename = "Filename",
+}
+
 export interface CardsViewSettings {
   minCardWidth: number;
   launchOnStart: boolean;
+  displayTitle: TitleDisplayMode;
 }
 
 export const DEFAULT_SETTINGS: CardsViewSettings = {
   minCardWidth: 200,
   launchOnStart: false,
+  displayTitle: TitleDisplayMode.Both,
 };
 
 export class CardsViewSettingsTab extends PluginSettingTab {
@@ -37,6 +45,19 @@ export class CardsViewSettingsTab extends PluginSettingTab {
             }
 
             this.plugin.settings.minCardWidth = parseInt(value);
+            await this.plugin.saveSettings();
+          }),
+      );
+
+    new Setting(containerEl)
+      .setName("Title display mode")
+      .setDesc("What to display on cards starting with a # Level 1 title")
+      .addDropdown((dropdown) =>
+        dropdown
+          .addOptions(TitleDisplayMode)
+          .setValue(this.plugin.settings.displayTitle)
+          .onChange(async (value) => {
+            this.plugin.settings.displayTitle = value as TitleDisplayMode;
             await this.plugin.saveSettings();
           }),
       );
