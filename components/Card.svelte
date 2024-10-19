@@ -1,18 +1,92 @@
 <script lang="ts">
-  import { MarkdownRenderer, setIcon, TFile } from "obsidian";
+  import {
+    type MarkdownPostProcessorContext,
+    MarkdownPreviewRenderer,
+    MarkdownRenderer,
+    setIcon,
+    TFile,
+  } from "obsidian";
   import { createEventDispatcher, onMount } from "svelte";
-  import { skipNextTransition, app, view } from "./store";
+  import { skipNextTransition, app, view, settings } from "./store";
+  import { TitleDisplayMode } from "../settings";
+  import type { Child } from "svelte-eslint-parser/lib/parser/compat";
 
   export let file: TFile;
-
+  let displayFilename: boolean = true;
   let contentDiv: HTMLElement;
+
+  function postProcessor(
+    element: HTMLElement,
+    context: MarkdownPostProcessorContext,
+  ) {
+    if (context.sourcePath !== file.path) {
+      // Very important to check if the sourcePath is the same as the file path
+      // Otherwise, the post processor will be applied to all files
+      return;
+    }
+
+    if (
+      $settings.displayTitle != TitleDisplayMode.Both &&
+      element.children.length > 0 &&
+      element.children[0].tagName === "H1" &&
+      element.children[0].textContent
+    ) {
+      if ($settings.displayTitle == TitleDisplayMode.Title) {
+        displayFilename = false;
+      } else if ($settings.displayTitle == TitleDisplayMode.Filename) {
+        element.children[0].remove();
+      }
+    }
+
+    if (element.children.length === 0) {
+      return;
+    }
+
+    // Find block where to cut the preview
+    let lastBlockIndex: number = 0,
+      charCount: number = 0;
+    do {
+      charCount += element.children[lastBlockIndex]?.textContent?.length || 0;
+    } while (
+      lastBlockIndex < element.children.length &&
+      charCount < 200 &&
+      ++lastBlockIndex
+    );
+
+    // Remove all blocks after the last block
+    for (
+      let i = element.children.length - 1;
+      i > lastBlockIndex || element.children[i].tagName !== "P";
+      i--
+    ) {
+      element.children[i].remove();
+    }
+
+    if (charCount < 200) {
+      return;
+    }
+
+    // Cut the last block
+    if (
+      !element.children[lastBlockIndex].lastChild ||
+      element.children[lastBlockIndex].lastChild?.nodeType !== Node.TEXT_NODE
+    ) {
+      return;
+    }
+
+    const lastElText = element.children[lastBlockIndex].lastChild?.textContent;
+    if (lastElText != null) {
+      const cut = Math.min(50, 200 - (charCount - lastElText.length));
+      (element.children[lastBlockIndex].lastChild as Child).textContent =
+        `${lastElText.slice(0, cut)} ...`;
+    }
+  }
 
   const renderFile = async (el: HTMLElement): Promise<void> => {
     const content = await file.vault.cachedRead(file);
-    // get first 10 lines of the file
-    const tenLines = content.split("\n").slice(0, 10).join("\n");
-    const summary = `${tenLines.length < 200 ? tenLines : content.slice(0, 200)}${content.length > 200 ? " ..." : ""}`;
-    await MarkdownRenderer.render($app, summary, el, file.path, $view);
+    MarkdownPreviewRenderer.registerPostProcessor(postProcessor);
+    await MarkdownRenderer.render($app, content, el, file.path, $view);
+    MarkdownPreviewRenderer.unregisterPostProcessor(postProcessor);
   };
 
   const trashFile = async () => {
@@ -40,7 +114,7 @@
   on:keydown={openFile}
   tabindex="0"
 >
-  <h3>{file.basename}</h3>
+  {#if displayFilename}<h1>{file.basename}</h1>{/if}
   <div bind:this={contentDiv} />
   <div class="card-info">
     {#if file.parent != null && file.parent.path !== "/"}

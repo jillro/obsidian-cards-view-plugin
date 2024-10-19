@@ -2,7 +2,7 @@ import CardsViewPlugin from "./main";
 import { App, Notice, PluginSettingTab, Setting } from "obsidian";
 
 export enum TitleDisplayMode {
-  Both = "Both title and filename",
+  Both = "Both",
   Title = "Title",
   Filename = "Filename",
 }
@@ -54,7 +54,11 @@ export class CardsViewSettingsTab extends PluginSettingTab {
       .setDesc("What to display on cards starting with a # Level 1 title")
       .addDropdown((dropdown) =>
         dropdown
-          .addOptions(TitleDisplayMode)
+          .addOptions({
+            [TitleDisplayMode.Both]: "Both title and filename",
+            [TitleDisplayMode.Title]: "Title",
+            [TitleDisplayMode.Filename]: "Filename",
+          })
           .setValue(this.plugin.settings.displayTitle)
           .onChange(async (value) => {
             this.plugin.settings.displayTitle = value as TitleDisplayMode;
