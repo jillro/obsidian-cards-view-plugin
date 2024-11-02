@@ -42,6 +42,21 @@
       return;
     }
 
+    // Add shadow to blocks of embed notes (we take all .internal-embed,
+    // including images, because we can't differentiate them at that time,
+    // but CSS will only apply to embed notes)
+    for (let i = 0; i < element.children.length; i++) {
+      if (
+        element.children[i].getElementsByClassName("internal-embed").length ||
+        element.children[i].className.includes("block-language-dataview")
+      ) {
+        console.log("Adding shadow to embed note");
+        element.children[i].appendChild(
+          document.createElement("div"),
+        ).className = "embed-shadow";
+      }
+    }
+
     // Find block where to cut the preview
     let lastBlockIndex: number = 0,
       charCount: number = 0;
@@ -163,6 +178,46 @@
 
   .card :global(ul) {
     padding-left: var(--size-4-5);
+  }
+
+  .card :global(p:has(> span.image-embed):not(:has(br))) {
+    margin: 0;
+  }
+
+  .card :global(span.image-embed) {
+    margin: 0 calc(-1 * var(--card-padding));
+    width: calc(100% + 2 * var(--card-padding));
+  }
+
+  /* Images embeds alone in a paragraph */
+  .card :global(p:has(> span.image-embed):not(:has(br)) span.image-embed) {
+    display: block;
+    & img {
+      display: block;
+    }
+  }
+
+  /* Image embeds followed by line break in same paragraph */
+  .card :global(p:has(> span.image-embed):has(br) span.image-embed) {
+    display: inline-block;
+  }
+
+  /** Embed notes */
+  .card :global(p:has(> span.markdown-embed)),
+  .card :global(.block-language-dataview) {
+    overflow: hidden;
+    max-height: 5rem;
+    position: relative;
+  }
+
+  .card :global(p:has(> span.markdown-embed) > .embed-shadow),
+  .card :global(.block-language-dataview > .embed-shadow) {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    box-shadow: inset 0 -2rem 1rem -1rem var(--background-primary-alt);
   }
 
   .card:hover {
