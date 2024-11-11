@@ -25,17 +25,7 @@ export class CardsViewPluginView extends ItemView {
 
   async onOpen() {
     const viewContent = this.containerEl.children[1];
-
-    store.app.set(this.app);
     store.view.set(this);
-    store.settings.set(this.settings);
-
-    store.appCache.set(this.app.metadataCache);
-    this.registerEvent(
-      this.app.metadataCache.on("resolved", async () =>
-        store.appCache.update(() => this.app.metadataCache),
-      ),
-    );
 
     store.files.set(this.app.vault.getMarkdownFiles());
     this.registerEvent(
