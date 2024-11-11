@@ -22,8 +22,16 @@ export const appCache = writable<MetadataCache>();
 export const files = writable<TFile[]>([]);
 
 export const sort = writable<Sort>(Sort.Modified);
-export const sortedFiles = derived([sort, files], ([$sort, $files]) =>
-  [...$files].sort((a: TFile, b: TFile) => b.stat[$sort] - a.stat[$sort]),
+export const sortedFiles = derived(
+  [sort, files, settings],
+  ([$sort, $files, $settings]) =>
+    [...$files].sort(
+      (a: TFile, b: TFile) =>
+        ($settings.pinnedFiles.includes(b.path) ? 1 : 0) -
+          ($settings.pinnedFiles.includes(a.path) ? 1 : 0) ||
+        b.stat[$sort] - a.stat[$sort],
+    ),
+  [] as TFile[],
 );
 
 export const searchQuery = writable<string>("");

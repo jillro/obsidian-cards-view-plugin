@@ -14,6 +14,8 @@
   export let file: TFile;
   let displayFilename: boolean = true;
   let contentDiv: HTMLElement;
+  let pinned: boolean;
+  $: pinned = $settings.pinnedFiles.includes(file.path);
 
   function postProcessor(
     element: HTMLElement,
@@ -100,6 +102,12 @@
     MarkdownPreviewRenderer.unregisterPostProcessor(postProcessor);
   };
 
+  const togglePin = async () => {
+    $settings.pinnedFiles = pinned
+      ? $settings.pinnedFiles.filter((f) => f !== file.path)
+      : [...$settings.pinnedFiles, file.path];
+  };
+
   const trashFile = async () => {
     await file.vault.trash(file, true);
   };
@@ -107,6 +115,7 @@
   const openFile = async () =>
     await $app.workspace.getLeaf("tab").openFile(file);
 
+  const pinButton = (element: HTMLElement) => setIcon(element, "pin");
   const trashIcon = (element: HTMLElement) => setIcon(element, "trash");
   const folderIcon = (element: HTMLElement) => setIcon(element, "folder");
 
@@ -128,8 +137,14 @@
   {#if displayFilename}<h1>{file.basename}</h1>{/if}
   <div bind:this={contentDiv} />
   <div class="card-info">
+    <button
+      class="clickable-icon"
+      class:is-active={pinned}
+      use:pinButton
+      on:click|stopPropagation={togglePin}
+    />
     {#if file.parent != null && file.parent.path !== "/"}
-      <span use:folderIcon /><span class="folder-name">{file.parent.path}</span>
+      <div class="folder-name"><span use:folderIcon />{file.parent.path}</div>
     {/if}
     <button
       class="clickable-icon"
@@ -233,11 +248,21 @@
     display: flex;
     flex-direction: row;
     align-items: center;
-    justify-content: end;
+    justify-content: space-between;
     gap: var(--size-4-1);
+  }
+
+  .card .card-info .clickable-icon.is-active {
+    color: var(--tab-text-color-focused-active);
+    background-color: var(--background-modifier-hover);
   }
 
   .card .card-info .folder-name {
     flex-grow: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--size-4-1);
+    color: var(--text-muted);
   }
 </style>

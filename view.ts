@@ -40,6 +40,9 @@ export class CardsViewPluginView extends ItemView {
     store.files.set(this.app.vault.getMarkdownFiles());
     this.registerEvent(
       this.app.vault.on("create", async (file: TAbstractFile) => {
+        if (!this.app.workspace.layoutReady) {
+          return;
+        }
         if (file instanceof TFile && file.extension === "md") {
           store.files.update((files) => files?.concat(file));
         }

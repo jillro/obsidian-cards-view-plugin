@@ -1,9 +1,8 @@
 <script lang="ts">
-  import { debounce, Menu, SearchComponent, setIcon, TFile } from "obsidian";
+  import { debounce, Menu, SearchComponent, setIcon } from "obsidian";
   import { afterUpdate, onMount } from "svelte";
   import MiniMasonry from "minimasonry";
 
-  import type { CardsViewSettings } from "../settings";
   import Card from "./Card.svelte";
   import {
     tags,

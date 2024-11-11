@@ -11,12 +11,14 @@ export interface CardsViewSettings {
   minCardWidth: number;
   launchOnStart: boolean;
   displayTitle: TitleDisplayMode;
+  pinnedFiles: string[];
 }
 
 export const DEFAULT_SETTINGS: CardsViewSettings = {
   minCardWidth: 200,
   launchOnStart: false,
   displayTitle: TitleDisplayMode.Both,
+  pinnedFiles: [],
 };
 
 export class CardsViewSettingsTab extends PluginSettingTab {
