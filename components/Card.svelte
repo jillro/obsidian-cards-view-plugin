@@ -69,12 +69,8 @@
     );
 
     // Remove all blocks after the last block
-    for (
-      let i = element.children.length - 1;
-      i > lastBlockIndex || element.children[i].tagName !== "P";
-      i--
-    ) {
-      element.children[i].remove();
+    for (let i = element.children.length - 1; i > lastBlockIndex; i--) {
+      element.children[i]?.remove();
     }
 
     if (charCount < 200) {
