@@ -1,5 +1,8 @@
-import CardsViewPlugin from "./main";
+// ./src/settings.ts
+
 import { App, Notice, PluginSettingTab, Setting } from "obsidian";
+
+import CardsViewPlugin from "../main";
 
 export enum TitleDisplayMode {
   Both = "Both",

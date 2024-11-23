@@ -1,7 +1,12 @@
+// ./src/view.ts
+
+import "../styles.css";
+
 import { ItemView, TAbstractFile, TFile, WorkspaceLeaf } from "obsidian";
+import store, { Sort, view } from "./components/store";
+
 import type { CardsViewSettings } from "./settings";
 import Root from "./components/Root.svelte";
-import store, { Sort } from "./components/store";
 import { get } from "svelte/store";
 
 export const VIEW_TYPE = "cards-view";
@@ -25,6 +30,7 @@ export class CardsViewPluginView extends ItemView {
 
   async onOpen() {
     const viewContent = this.containerEl.children[1];
+    console.log("Here is a viewContent :", viewContent);
     store.view.set(this);
 
     store.files.set(this.app.vault.getMarkdownFiles());
@@ -36,25 +42,25 @@ export class CardsViewPluginView extends ItemView {
         if (file instanceof TFile && file.extension === "md") {
           store.files.update((files) => files?.concat(file));
         }
-      }),
+      })
     );
     this.registerEvent(
       this.app.vault.on("delete", async (file: TAbstractFile) => {
         if (file instanceof TFile && file.extension === "md") {
           store.files.update((files) =>
-            files?.filter((f) => f.path !== file.path),
+            files?.filter((f) => f.path !== file.path)
           );
         }
-      }),
+      })
     );
     this.registerEvent(
       this.app.vault.on("modify", async (file: TAbstractFile) => {
         if (file instanceof TFile && file.extension === "md") {
           store.files.update((files) =>
-            files?.map((f) => (f.path === file.path ? file : f)),
+            files?.map((f) => (f.path === file.path ? file : f))
           );
         }
-      }),
+      })
     );
     this.registerEvent(
       this.app.vault.on(
@@ -62,32 +68,52 @@ export class CardsViewPluginView extends ItemView {
         async (file: TAbstractFile, oldPath: string) => {
           if (file instanceof TFile && file.extension === "md") {
             store.files.update((files) =>
-              files?.map((f) => (f.path === oldPath ? file : f)),
+              files?.map((f) => (f.path === oldPath ? file : f))
             );
           }
-        },
-      ),
+        }
+      )
     );
 
     this.svelteRoot = new Root({
       target: viewContent,
     });
 
-    // On scroll 80% of viewContent, load more cards
-    viewContent.addEventListener("scroll", async () => {
-      if (
-        viewContent.scrollTop + viewContent.clientHeight >
-        viewContent.scrollHeight - 500
-      ) {
-        store.skipNextTransition.set(true);
-        store.displayedCount.set(get(store.displayedFiles).length + 50);
-      }
-    });
+    // Obtain a reference to the cards-container via Svelte component instance
+    // const rootInstance = this.svelteRoot as Root; // Assuming Root has cardsContainer defined
+    // const cardsContainer = await rootInstance.cardsContainer;
+    const cardsContainer = viewContent.children[1];
+    console.log("Here is a cardsContainer :", cardsContainer);
+    // Apply the scroll event to cardsContainer
+    if (cardsContainer) {
+      cardsContainer.addEventListener("scroll", async () => {
+        if (
+          cardsContainer.scrollTop + cardsContainer.clientHeight >
+          cardsContainer.scrollHeight - 100
+        ) {
+          store.skipNextTransition.set(true);
+          store.displayedCount.set(get(store.displayedFiles).length + 50);
+        }
+      });
+    } else {
+      console.error("cardsContainer is undefined");
+    }
+
+    // // On scroll 80% of viewContent, load more cards
+    // viewContent.addEventListener("scroll", async () => {
+    //   if (
+    //     viewContent.scrollTop + viewContent.clientHeight >
+    //     viewContent.scrollHeight - 500
+    //   ) {
+    //     store.skipNextTransition.set(true);
+    //     store.displayedCount.set(get(store.displayedFiles).length + 50);
+    //   }
+    // });
 
     this.app.workspace.on("active-leaf-change", () => {
       // check our leaf is visible
       const rootLeaf = this.app.workspace.getMostRecentLeaf(
-        this.app.workspace.rootSplit,
+        this.app.workspace.rootSplit
       );
       store.viewIsVisible.set(rootLeaf?.view?.getViewType() === VIEW_TYPE);
     });

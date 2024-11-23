@@ -1,3 +1,5 @@
+// ./src/components/store.ts
+
 import {
   type App,
   type CachedMetadata,
@@ -80,6 +82,10 @@ export const displayedFiles = derived(
   ([$searchResultFiles, $displayedCount]) =>
     $searchResultFiles.slice(0, $displayedCount),
 );
+
+displayedCount.subscribe((count) => console.log("Displayed Count:", count));
+displayedFiles.subscribe((files) => console.log("Displayed Files:", files));
+
 
 export const viewIsVisible = writable(false);
 export const skipNextTransition = writable(true);

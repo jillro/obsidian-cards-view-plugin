@@ -1,3 +1,213 @@
 /*
  * Required by Obsidian to load the plugin
  */
+
+/* Root.svelte */
+.action-bar {
+    overflow: auto;
+    position: relative;
+    display: flex;
+    flex-direction: row-reverse;
+    gap: var(--size-4-5);
+    margin-bottom: var(--size-4-5);
+    flex-wrap: wrap;
+
+    @media screen and (min-width: 700px) {
+        flex-wrap: nowrap;
+    }
+}
+
+.action-bar .action-bar__tags {
+    flex-grow: 1;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+    white-space: nowrap;
+    overflow: auto;
+
+    &::-webkit-scrollbar {
+        display: none;
+    }
+
+    @media screen and (min-width: 700px) {
+        overflow: hidden;
+
+        & .action-bar__tags__list {
+            transition: box-shadow 0.3s;
+        }
+
+        &:hover .action-bar__tags__list {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+
+            white-space: normal;
+            z-index: var(--layer-popover);
+            background-color: var(--background-primary);
+            padding-bottom: var(--size-4-2);
+            box-shadow: 0 0 var(--size-2-3) var(--size-2-3) var(--background-primary);
+
+            & button.action-bar__tag {
+                margin-bottom: var(--size-2-2);
+            }
+        }
+    }
+}
+
+.action-bar button.action-bar__tag {
+    font-size: var(--tag-size);
+    color: var(--tag-color);
+    text-decoration: var(--tag-decoration);
+    background-color: var(--tag-background);
+    border: var(--tag-border-width) solid var(--tag-border-color);
+    padding: var(--tag-padding-y) var(--tag-padding-x);
+    border-radius: var(--tag-radius);
+    font-weight: var(--tag-weight);
+    margin-right: var(--size-2-2);
+
+    &:hover {
+        color: var(--tag-color-hover);
+        text-decoration: var(--tag-decoration-hover);
+        background-color: var(--tag-background-hover);
+        border-color: var(--tag-border-color-hover);
+    }
+}
+
+.action-bar .action-bar__search {
+    flex-grow: 1;
+
+    @media screen and (min-width: 700px) {
+        min-width: 300px;
+        max-width: 300px;
+        box-shadow: calc(0px - var(--size-4-5)) 0 var(--size-2-3) var(--size-2-3) var(--background-primary);
+    }
+}
+
+.cards-container {
+    position: relative;
+    container-type: inline-size;
+    max-height: 100%;
+    /* Or a specific height, e.g., 500px */
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.cards-container :global(*) {
+    --card-padding: var(--size-4-3);
+    --card-gutter: var(--size-4-5);
+}
+
+/* Card.svelte */
+
+.card {
+    position: absolute;
+    background-color: var(--background-primary-alt);
+    border: 1px solid var(--background-modifier-border);
+    padding: var(--card-padding);
+    word-wrap: break-word;
+    overflow-y: hidden;
+    margin: 0;
+    transition-property: transform;
+    transition-duration: 0.4s;
+    transform: translate(0, 100vh);
+}
+
+.card.skip-transition {
+    transition: none;
+}
+
+.card {
+    font-size: 0.8rem;
+}
+
+.card :global(p),
+.card :global(ul) {
+    margin: 0.3rem 0;
+}
+
+.card :global(h1),
+.card :global(h2),
+.card :global(h3) {
+    margin: 0 0 0.3rem;
+}
+
+.card :global(ul) {
+    padding-left: var(--size-4-5);
+}
+
+.card :global(p:has(> span.image-embed):not(:has(br))) {
+    margin: 0;
+}
+
+.card :global(span.image-embed) {
+    margin: 0 calc(-1 * var(--card-padding));
+    width: calc(100% + 2 * var(--card-padding));
+}
+
+/* Images embeds alone in a paragraph */
+.card :global(p:has(> span.image-embed):not(:has(br)) span.image-embed) {
+    display: block;
+
+    & img {
+        display: block;
+    }
+}
+
+/* Image embeds followed by line break in same paragraph */
+.card :global(p:has(> span.image-embed):has(br) span.image-embed) {
+    display: inline-block;
+}
+
+/** Embed notes */
+.card :global(p:has(> span.markdown-embed)),
+.card :global(.block-language-dataview) {
+    overflow: hidden;
+    max-height: 5rem;
+    position: relative;
+}
+
+.card :global(p:has(> span.markdown-embed) > .embed-shadow),
+.card :global(.block-language-dataview > .embed-shadow) {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    box-shadow: inset 0 -2rem 1rem -1rem var(--background-primary-alt);
+}
+
+.card:hover {
+    border-color: var(--background-modifier-border-hover);
+}
+
+.card h3 {
+    word-wrap: break-word;
+}
+
+.card .card-info {
+    margin: calc(-1 * var(--card-padding));
+    margin-top: 0;
+    border-top: 1px solid var(--background-modifier-border);
+    padding: var(--size-4-1) var(--card-padding);
+    background-color: var(--background-primary);
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--size-4-1);
+}
+
+.card .card-info .clickable-icon.is-active {
+    color: var(--tab-text-color-focused-active);
+    background-color: var(--background-modifier-hover);
+}
+
+.card .card-info .folder-name {
+    flex-grow: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--size-4-1);
+    color: var(--text-muted);
+}
