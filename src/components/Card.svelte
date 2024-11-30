@@ -19,6 +19,11 @@
   let pinned: boolean;
   $: pinned = $settings.pinnedFiles.includes(file.path);
 
+  // Compute style based on settings
+  $: cardStyle = $settings.maxCardHeight
+    ? `max-height: ${$settings.maxCardHeight}px; overflow: hidden; text-overflow: ellipsis;`
+    : "";
+
   function postProcessor(
     element: HTMLElement,
     context: MarkdownPostProcessorContext,
@@ -89,6 +94,7 @@
       return;
     }
 
+    // TODO : I have to find out how many words will fit in the card, when a max-hight option has been set, to add the '...' at the end.
     const lastElText = element.children[lastBlockIndex].lastChild?.textContent;
     if (lastElText != null) {
       const cut = Math.min(50, 200 - (charCount - lastElText.length));
@@ -130,14 +136,19 @@
 
 <div
   class="card"
+  style={cardStyle}
   class:skip-transition={$skipNextTransition}
   on:click={openFile}
   role="link"
   on:keydown={openFile}
   tabindex="0"
 >
-  {#if displayFilename}<h1>{file.basename}</h1>{/if}
-  <div bind:this={contentDiv} />
+  <div class="top-bar">
+    {#if displayFilename}<div>{file.basename}</div>{/if}
+  </div>
+
+  <div class="card-content" bind:this={contentDiv}></div>
+
   <div class="card-info">
     <button
       class="clickable-icon"
@@ -148,11 +159,13 @@
     {#if file.parent != null && file.parent.path !== "/"}
       <div class="folder-name"><span use:folderIcon />{file.parent.path}</div>
     {/if}
-    <button
-      class="clickable-icon"
-      use:trashIcon
-      on:click|stopPropagation={trashFile}
-    />
+    {#if $settings.showDeleteButton}
+      <button
+        class="clickable-icon"
+        use:trashIcon
+        on:click|stopPropagation={trashFile}
+      />
+    {/if}
   </div>
 </div>
 
