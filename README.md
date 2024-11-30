@@ -23,6 +23,7 @@ This is a plugin for Obsidian.md that displays all your notes as cards for bette
 `Open Obsidian settings` > `Community plugins` > `click on Browse button` > `search for Brat` > `Install and Enable`.
 
 **Step 3 :** Add this plugin into the Brat beta plugin list. See below gif :
+![Installation using BRAT](./assets/InstallInBRAT.gif)
 
 **Step 4 :** Thats it! Now you can open the Cards View, as usual.
 
