@@ -12,6 +12,7 @@ export enum TitleDisplayMode {
 
 export interface CardsViewSettings {
   minCardWidth: number;
+  maxCardHeight: number | null;
   launchOnStart: boolean;
   displayTitle: TitleDisplayMode;
   pinnedFiles: string[];
@@ -19,6 +20,7 @@ export interface CardsViewSettings {
 
 export const DEFAULT_SETTINGS: CardsViewSettings = {
   minCardWidth: 200,
+  maxCardHeight: null,
   launchOnStart: false,
   displayTitle: TitleDisplayMode.Both,
   pinnedFiles: [],
@@ -37,6 +39,23 @@ export class CardsViewSettingsTab extends PluginSettingTab {
     containerEl.empty();
 
     new Setting(containerEl)
+      .setName("Title display mode")
+      .setDesc("What to display on cards starting with a # Level 1 title")
+      .addDropdown((dropdown) =>
+        dropdown
+          .addOptions({
+            [TitleDisplayMode.Both]: "Both title and filename",
+            [TitleDisplayMode.Title]: "Title",
+            [TitleDisplayMode.Filename]: "Filename",
+          })
+          .setValue(this.plugin.settings.displayTitle)
+          .onChange(async (value) => {
+            this.plugin.settings.displayTitle = value as TitleDisplayMode;
+            await this.plugin.saveSettings();
+          })
+      );
+
+    new Setting(containerEl)
       .setName("Minimum card width")
       .setDesc("Cards will not be smaller than this width (in pixels)")
       .addText((text) =>
@@ -51,20 +70,39 @@ export class CardsViewSettingsTab extends PluginSettingTab {
 
             this.plugin.settings.minCardWidth = parseInt(value);
             await this.plugin.saveSettings();
-          }),
+          })
       );
 
     new Setting(containerEl)
-      .setName("Title display mode")
-      .setDesc("What to display on cards starting with a # Level 1 title")
-      .addDropdown((dropdown) =>
-        dropdown
-          .addOptions({
-            [TitleDisplayMode.Both]: "Both title and filename",
-            [TitleDisplayMode.Title]: "Title",
-            [TitleDisplayMode.Filename]: "Filename",
+      .setName("Maximum card height")
+      .setDesc(
+        "Set the maximum height of the card in pixels (leave blank for no restriction)"
+      )
+      .addText((text) =>
+        text
+          .setPlaceholder("e.g., 300")
+          .setValue(this.plugin.settings.maxCardHeight?.toString() || "")
+          .onChange(async (value) => {
+            if (value.trim() === "") {
+              this.plugin.settings.maxCardHeight = null;
+            } else if (!isNaN(parseInt(value))) {
+              this.plugin.settings.maxCardHeight = parseInt(value);
+            } else {
+              new Notice("Invalid number");
+              return;
+            }
+            await this.plugin.saveSettings();
           })
-          .setValue(this.plugin.settings.displayTitle)
+      );
+
+    new Setting(containerEl)
+      .setName("Show delete button")
+      .setDesc(
+        "Disable this option to remove the delete button, so you dont delete any note accidentally."
+      )
+      .addToggle((toggle) =>
+        toggle
+          .setValue(this.plugin.settings.showDeleteButton)
           .onChange(async (value) => {
             this.plugin.settings.displayTitle = value as TitleDisplayMode;
             await this.plugin.saveSettings();
