@@ -117,7 +117,7 @@
   };
 
   const trashFile = async () => {
-    await file.vault.trash(file, true);
+    await file.vault.trash(file, $settings.toSystemTrash === 'system'? true : false);
   };
 
   const openFile = async () =>
