@@ -52,6 +52,14 @@
         $sort = Sort.Modified;
       });
     });
+    sortMenu.addSeparator();
+    sortMenu.addItem((item) => {
+      item.setTitle("Show empty notes");
+      item.setChecked($settings.showEmptyNotes);
+      item.onClick(async() => {
+        $settings.showEmptyNotes = !($settings.showEmptyNotes);
+      })
+    })
     sortMenu.showAtMouseEvent(event);
   }
 
