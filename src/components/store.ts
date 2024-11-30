@@ -27,12 +27,14 @@ export const sort = writable<Sort>(Sort.Modified);
 export const sortedFiles = derived(
   [sort, files, settings],
   ([$sort, $files, $settings]) =>
-    [...$files].sort(
-      (a: TFile, b: TFile) =>
-        ($settings.pinnedFiles.includes(b.path) ? 1 : 0) -
-          ($settings.pinnedFiles.includes(a.path) ? 1 : 0) ||
-        b.stat[$sort] - a.stat[$sort],
-    ),
+    [...$files]
+      .filter((file: TFile) => !file.path.endsWith(".excalidraw.md")) // Exclude .excalidraw.md files
+      .sort(
+        (a: TFile, b: TFile) =>
+          ($settings.pinnedFiles.includes(b.path) ? 1 : 0) -
+            ($settings.pinnedFiles.includes(a.path) ? 1 : 0) ||
+          b.stat[$sort] - a.stat[$sort],
+      ),
   [] as TFile[],
 );
 
@@ -85,7 +87,6 @@ export const displayedFiles = derived(
 
 displayedCount.subscribe((count) => console.log("Displayed Count:", count));
 displayedFiles.subscribe((files) => console.log("Displayed Files:", files));
-
 
 export const viewIsVisible = writable(false);
 export const skipNextTransition = writable(true);
