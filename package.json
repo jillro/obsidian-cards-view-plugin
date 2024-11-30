@@ -1,37 +1,37 @@
 {
-	"name": "cards-view",
-	"version": "1.7.0",
-	"description": "Plugin for Obsidian.md. Displays a card view of your notes.",
-	"main": "main.js",
-	"scripts": {
-		"dev": "node esbuild.config.mjs",
-		"build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
-		"version": "node version-bump.mjs && git add manifest.json versions.json"
-	},
-	"keywords": [],
-	"author": "",
-	"license": "MIT",
-	"devDependencies": {
-		"@tsconfig/svelte": "^5.0.2",
-		"@types/masonry-layout": "^4.2.7",
-		"@types/minimasonry": "^1.3.5",
-		"@types/node": "^16.11.6",
-		"@typescript-eslint/eslint-plugin": "^7.3.1",
-		"@typescript-eslint/parser": "^7.3.1",
-		"builtin-modules": "3.3.0",
-		"esbuild": "^0.20.1",
-		"esbuild-svelte": "^0.8.0",
-		"eslint-config-prettier": "^9.1.0",
-		"eslint-plugin-svelte": "^2.43.0",
-		"obsidian": "latest",
-		"prettier": "^3.3.3",
-		"prettier-plugin-svelte": "^3.2.6",
-		"svelte": "^4.2.12",
-		"svelte-preprocess": "^5.1.3",
-		"tslib": "^2.6.2",
-		"typescript": "^5.3.3"
-	},
-	"dependencies": {
-		"minimasonry": "^1.3.2"
-	}
+  "name": "cards-view-beta",
+  "version": "1.7.0",
+  "description": "Plugin for Obsidian.md. View all your notes in a form of cards for visual understanding.",
+  "main": "main.js",
+  "scripts": {
+    "dev": "node esbuild.config.mjs",
+    "build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
+    "version": "node version-bump.mjs && git add manifest.json versions.json"
+  },
+  "keywords": [],
+  "author": "Atmanand Gauns",
+  "license": "MIT",
+  "devDependencies": {
+    "@tsconfig/svelte": "^5.0.2",
+    "@types/masonry-layout": "^4.2.7",
+    "@types/minimasonry": "^1.3.5",
+    "@types/node": "^16.11.6",
+    "@typescript-eslint/eslint-plugin": "^7.3.1",
+    "@typescript-eslint/parser": "^7.3.1",
+    "builtin-modules": "3.3.0",
+    "esbuild": "^0.20.1",
+    "esbuild-svelte": "^0.8.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-svelte": "^2.43.0",
+    "obsidian": "latest",
+    "prettier": "^3.3.3",
+    "prettier-plugin-svelte": "^3.2.6",
+    "svelte": "^4.2.12",
+    "svelte-preprocess": "^5.1.3",
+    "tslib": "^2.6.2",
+    "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "minimasonry": "^1.3.2"
+  }
 }
