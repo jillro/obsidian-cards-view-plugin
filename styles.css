@@ -111,6 +111,22 @@
     transition-property: transform;
     transition-duration: 0.4s;
     transform: translate(0, 100vh);
+    display: flex;
+    flex-direction: column;
+    height: var(--card-height);
+    /* Set max height for cards */
+}
+
+.top-bar {
+    background-color: var(--background-secondary);
+    font-size: 1em;
+    color: var(--text-muted);
+    padding: 0.2rem;
+    border-bottom: 1px solid var(--background-modifier-border);
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .card.skip-transition {
@@ -198,6 +214,23 @@
     gap: var(--size-4-1);
 }
 
+.card-content {
+    /* flex-grow: 1; */
+    /* Allow contentDiv to take remaining space */
+    /* overflow-y: auto; */
+    /* Make contentDiv scrollable if content overflows */
+    padding-inline: 8px;
+}
+
+.card-content blockquote {
+    margin-inline: 8px;
+}
+
+.card-info {
+    flex-shrink: 0;
+    /* Prevent card-info from being pushed off-screen */
+}
+
 .card .card-info .clickable-icon.is-active {
     color: var(--tab-text-color-focused-active);
     background-color: var(--background-modifier-hover);
@@ -210,4 +243,15 @@
     justify-content: center;
     gap: var(--size-4-1);
     color: var(--text-muted);
+}
+
+.card-info .clickable-icon {
+    opacity: 0;
+    transform: scale(0.9);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.card:hover .clickable-icon {
+    opacity: 1;
+    transform: scale(1);
 }
