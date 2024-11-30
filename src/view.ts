@@ -83,7 +83,6 @@ export class CardsViewPluginView extends ItemView {
     // const rootInstance = this.svelteRoot as Root; // Assuming Root has cardsContainer defined
     // const cardsContainer = await rootInstance.cardsContainer;
     const cardsContainer = viewContent.children[1];
-    console.log("Here is a cardsContainer :", cardsContainer);
     // Apply the scroll event to cardsContainer
     if (cardsContainer) {
       cardsContainer.addEventListener("scroll", async () => {
