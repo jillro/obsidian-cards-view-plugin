@@ -14,6 +14,7 @@ export interface CardsViewSettings {
   minCardWidth: number;
   maxCardHeight: number | null;
   launchOnStart: boolean;
+  showDeleteButton: boolean;
   displayTitle: TitleDisplayMode;
   pinnedFiles: string[];
 }
@@ -22,6 +23,7 @@ export const DEFAULT_SETTINGS: CardsViewSettings = {
   minCardWidth: 200,
   maxCardHeight: null,
   launchOnStart: false,
+  showDeleteButton: true,
   displayTitle: TitleDisplayMode.Both,
   pinnedFiles: [],
 };
@@ -104,9 +106,9 @@ export class CardsViewSettingsTab extends PluginSettingTab {
         toggle
           .setValue(this.plugin.settings.showDeleteButton)
           .onChange(async (value) => {
-            this.plugin.settings.displayTitle = value as TitleDisplayMode;
+            this.plugin.settings.showDeleteButton = value;
             await this.plugin.saveSettings();
-          }),
+          })
       );
 
     new Setting(containerEl)
@@ -118,7 +120,7 @@ export class CardsViewSettingsTab extends PluginSettingTab {
           .onChange(async (value) => {
             this.plugin.settings.launchOnStart = value;
             await this.plugin.saveSettings();
-          }),
+          })
       );
 
     new Setting(containerEl)
@@ -129,7 +131,7 @@ export class CardsViewSettingsTab extends PluginSettingTab {
           this.plugin.settings = DEFAULT_SETTINGS;
           await this.plugin.saveSettings();
           this.display();
-        }),
+        })
       );
   }
 }
