@@ -35,16 +35,14 @@
     }
 
     if (
-      $settings.displayTitle != TitleDisplayMode.Both &&
+      $settings.displayTitle == TitleDisplayMode.Filename &&
       element.children.length > 0 &&
       element.children[0].tagName === "H1" &&
       element.children[0].textContent
     ) {
-      if ($settings.displayTitle == TitleDisplayMode.Title) {
+      element.children[0].remove();
+    } else if ($settings.displayTitle == TitleDisplayMode.Title) {
         displayFilename = false;
-      } else if ($settings.displayTitle == TitleDisplayMode.Filename) {
-        element.children[0].remove();
-      }
     }
 
     if (element.children.length === 0) {
