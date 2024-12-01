@@ -244,11 +244,13 @@
     background-color: var(--background-modifier-hover);
 }
 
-.card .card-info .folder-name {
+.card-info {
+    width: 100%;
     flex-grow: 1;
     display: flex;
+    flex-direction: row;
     align-items: center;
-    justify-content: center;
+    justify-content: space-between;
     gap: var(--size-4-1);
     color: var(--text-muted);
 }
