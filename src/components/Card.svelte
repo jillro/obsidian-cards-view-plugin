@@ -8,8 +8,8 @@
     setIcon,
     TFile,
   } from "obsidian";
-  import { createEventDispatcher, onMount } from "svelte";
-  import { skipNextTransition, app, view, settings } from "./store";
+  import { afterUpdate, createEventDispatcher, onMount } from "svelte";
+  import { skipNextTransition, app, view, settings, tags } from "./store";
   import { TitleDisplayMode } from "../settings";
   import type { Child } from "svelte-eslint-parser/lib/parser/compat";
 
@@ -18,11 +18,6 @@
   let contentDiv: HTMLElement;
   let pinned: boolean;
   $: pinned = $settings.pinnedFiles.includes(file.path);
-
-  // Compute style based on settings
-  $: cardStyle = $settings.maxCardHeight
-    ? `max-height: ${$settings.maxCardHeight}px; overflow: hidden; text-overflow: ellipsis;`
-    : "";
 
   function postProcessor(
     element: HTMLElement,
@@ -42,7 +37,7 @@
     ) {
       element.children[0].remove();
     } else if ($settings.displayTitle == TitleDisplayMode.Title) {
-        displayFilename = false;
+      displayFilename = false;
     }
 
     if (element.children.length === 0) {
@@ -139,6 +134,59 @@
     }
   };
 
+  type TagSetting = {
+    name: string;
+    color: string;
+  };
+
+  let backgroundColor = "";
+
+  const updateBackgroundColor = async () => {
+    if (contentDiv && $settings.tagPositionForCardColor === "content") {
+      const content = contentDiv.textContent || contentDiv.innerText;
+      for (let tag of $settings.tagColors) {
+        if (content.includes("#" + tag.name)) {
+          backgroundColor = tag.color;
+          break;
+        }
+      }
+    } else {
+      // const frontmatter = parseFrontMatterTags(
+      //   getFrontMatterInfo(await file.vault.cachedRead(file)),
+      // );
+      // console.log("What is the value of frontmatter :", frontmatter);
+
+      // contentDiv.getElementsByClassName('token key atrule')
+      // const frontmatter = getFrontMatterInfo()
+
+      // Get frontmatter data from the file
+      // const frontmatter = metadataCache.getFileCache(file)?.frontmatter;
+      // console.log("Following is the frontmatter I got now :", frontmatter, " | For the file :", file.path);
+
+      // if (frontmatter && frontmatter.tags) {
+      //   const frontmatterTags = Array.isArray(frontmatter.tags)
+      //     ? frontmatter.tags // If tags are in an array format
+      //     : [frontmatter.tags]; // If tags are a single string
+
+      //   for (let tag of $settings.tagColors) {
+      //     if (frontmatterTags.includes(tag.name)) {
+      //       backgroundColor = tag.color;
+      //       break;
+      //     }
+      //   }
+      // }
+    }
+  };
+
+  // Compute style based on settings
+  $: cardStyle = $settings.maxCardHeight
+    ? `max-height: ${$settings.maxCardHeight}px; overflow: hidden; text-overflow: ellipsis; background-color: ${backgroundColor};`
+    : `background-color: ${backgroundColor};`;
+
+  $: folderIconClass = $settings.showParentFolder
+    ? "folder-name"
+    : "clickable-icon";
+
   const pinButton = (element: HTMLElement) => setIcon(element, "pin");
   const trashIcon = (element: HTMLElement) => setIcon(element, "trash");
   const folderIcon = (element: HTMLElement) => setIcon(element, "folder");
@@ -149,6 +197,10 @@
   onMount(async () => {
     await renderFile(contentDiv);
     dispatch("loaded");
+  });
+
+  afterUpdate(() => {
+    updateBackgroundColor();
   });
 </script>
 
