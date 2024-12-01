@@ -179,15 +179,64 @@ export class CardsViewSettingsTab extends PluginSettingTab {
           })
       );
 
+    new Setting(containerEl).setName("Cards color based on tag").setHeading();
+
     new Setting(containerEl)
-      .setName("Launch on start")
-      .setDesc("Open the cards view when Obsidian starts")
-      .addToggle((toggle) =>
-        toggle
-          .setValue(this.plugin.settings.launchOnStart)
+      .setName("Where do you place the tags")
+      .setDesc(
+        "If you use frontmatter then create a property 'tags' and enter your tag name as value."
+      )
+      .addDropdown((dropdown) =>
+        dropdown
+          .addOptions({
+            [TagPostionForCardColor.content]: "In content",
+            [TagPostionForCardColor.frontmatter]: "In frontmatter",
+          })
+          .setValue(this.plugin.settings.tagPositionForCardColor)
           .onChange(async (value) => {
-            this.plugin.settings.launchOnStart = value;
+            this.plugin.settings.tagPositionForCardColor =
+              value as TagPostionForCardColor;
             await this.plugin.saveSettings();
+          })
+      );
+
+    this.plugin.settings.tagColors.forEach((tag, index) => {
+      const setting = new Setting(containerEl)
+        .addText((text) =>
+          text
+            .setPlaceholder("Tag Name")
+            .setValue(tag.name)
+            .onChange(async (value) => {
+              this.plugin.settings.tagColors[index].name = value;
+              await this.plugin.saveSettings();
+            })
+        )
+        .addColorPicker((text) =>
+          text.setValue(tag.color).onChange(async (value) => {
+            this.plugin.settings.tagColors[index].color = value;
+            await this.plugin.saveSettings();
+          })
+        )
+        .addButton((button) =>
+          button
+            .setButtonText("Delete")
+            .setCta()
+            .onClick(async () => {
+              this.plugin.settings.tagColors.splice(index, 1);
+              await this.plugin.saveSettings();
+              this.display();
+            })
+        );
+    });
+
+    new Setting(containerEl).addButton((button) =>
+      button
+        .setButtonText("Add Tag")
+        .setCta()
+        .onClick(async () => {
+          this.plugin.settings.tagColors.push({ name: "", color: "" });
+          await this.plugin.saveSettings();
+          this.display();
           })
       );
 
