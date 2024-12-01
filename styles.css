@@ -109,10 +109,8 @@
     position: absolute;
     background-color: var(--background-primary-alt);
     border: 1px solid var(--background-modifier-border);
-    padding: var(--card-padding);
     word-wrap: break-word;
     overflow-y: hidden;
-    margin: 0;
     transition-property: transform;
     transition-duration: 0.4s;
     transform: translate(0, 100vh);
@@ -122,12 +120,20 @@
     /* Set max height for cards */
     box-shadow: 0px 0px 0px 0px rgba(0, 0, 0, 0.2),
         -1px 4px 10px 0 rgba(0, 0, 0, 0.19);
+    margin: calc(-1 * var(--card-padding));
+    margin-top: 0;
+    border-top: 1px solid var(--background-modifier-border);
+    padding: var(--size-4-1) var(--card-padding);
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--size-4-1);
+    border-radius: 7px;
 }
 
 .top-bar {
-    background-color: var(--background-secondary);
-    font-size: 1em;
-    color: var(--text-muted);
+    font-size: 1.2em;
+    font-weight: 600;
+    color: var(--color-base-60);
     padding: 0.2rem;
     border-bottom: 1px solid var(--background-modifier-border);
     text-align: center;
@@ -208,20 +214,6 @@
     word-wrap: break-word;
 }
 
-.card .card-info {
-    margin: calc(-1 * var(--card-padding));
-    margin-top: 0;
-    border-top: 1px solid var(--background-modifier-border);
-    padding: var(--size-4-1) var(--card-padding);
-    background-color: var(--background-primary);
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--size-4-1);
-    border-radius: 7px;
-}
-
 .card-content {
     /* flex-grow: 1; */
     /* Allow contentDiv to take remaining space */
@@ -239,7 +231,7 @@
     /* Prevent card-info from being pushed off-screen */
 }
 
-.card .card-info .clickable-icon.is-active {
+.card .clickable-icon.is-active {
     color: var(--tab-text-color-focused-active);
     background-color: var(--background-modifier-hover);
 }
