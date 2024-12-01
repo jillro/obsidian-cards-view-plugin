@@ -25,7 +25,7 @@ export class CardsViewPluginView extends ItemView {
   }
 
   getDisplayText() {
-    return "Cards View (Beta)";
+    return "Cards View";
   }
 
   async onOpen() {
