@@ -1,10 +1,10 @@
 {
-	"id": "cards-view",
-	"name": "Cards View",
-	"version": "1.7.0",
-	"minAppVersion": "0.15.0",
-	"description": "Displays a card view of your notes.",
-	"author": "Maud Royer",
-	"authorUrl": "https://maudroyer.fr",
-	"isDesktopOnly": false
+  "id": "cards-view",
+  "name": "Cards View",
+  "version": "1.9.0",
+  "minAppVersion": "0.15.0",
+  "description": "Displays a card view of your notes.",
+  "author": "Maud Royer",
+  "authorUrl": "https://maudroyer.fr",
+  "isDesktopOnly": false
 }

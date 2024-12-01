@@ -4,9 +4,10 @@ import {
   type CardsViewSettings,
   CardsViewSettingsTab,
   DEFAULT_SETTINGS,
-} from "./settings";
-import { CardsViewPluginView, VIEW_TYPE } from "./view";
-import store from "./components/store";
+} from "./src/settings";
+import { CardsViewPluginView, VIEW_TYPE } from "./src/view";
+import store from "./src/components/store";
+import "./styles.css";
 
 export default class CardsViewPlugin extends Plugin {
   settings: CardsViewSettings = Object.assign({}, DEFAULT_SETTINGS);
