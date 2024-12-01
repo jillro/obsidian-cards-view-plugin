@@ -263,3 +263,8 @@
     opacity: 1;
     transform: scale(1);
 }
+
+.card-content-empty {
+    padding-block: 2rem;
+    text-align: center;
+}
