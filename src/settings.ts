@@ -10,12 +10,20 @@ export enum TitleDisplayMode {
   Filename = "Filename",
 }
 
+export enum DeleteFileMode {
+  System = "system",
+  Trash = "trash",
+  Permanent = "perm"
+}
+
 export interface CardsViewSettings {
   minCardWidth: number;
   maxCardHeight: number | null;
   launchOnStart: boolean;
   showDeleteButton: boolean;
   displayTitle: TitleDisplayMode;
+  showEmptyNotes: boolean;
+  toSystemTrash: DeleteFileMode;
   pinnedFiles: string[];
 }
 
@@ -25,6 +33,8 @@ export const DEFAULT_SETTINGS: CardsViewSettings = {
   launchOnStart: false,
   showDeleteButton: true,
   displayTitle: TitleDisplayMode.Both,
+  showEmptyNotes: false,
+  toSystemTrash: DeleteFileMode.System,
   pinnedFiles: [],
 };
 
@@ -107,6 +117,23 @@ export class CardsViewSettingsTab extends PluginSettingTab {
           .setValue(this.plugin.settings.showDeleteButton)
           .onChange(async (value) => {
             this.plugin.settings.showDeleteButton = value;
+            await this.plugin.saveSettings();
+          })
+      );
+
+    new Setting(containerEl)
+      .setName("Deleted files")
+      .setDesc("What happens to a file after you delete it.")
+      .addDropdown((dropdown) =>
+        dropdown
+          .addOptions({
+            [DeleteFileMode.System]: "Move to system trash",
+            [DeleteFileMode.Trash]: "Move to vault trash folder (.trash)",
+            [DeleteFileMode.Permanent]: "Permanently delete",
+          })
+          .setValue(this.plugin.settings.toSystemTrash)
+          .onChange(async (value) => {
+            this.plugin.settings.toSystemTrash = value as DeleteFileMode;
             await this.plugin.saveSettings();
           })
       );

@@ -25,12 +25,11 @@ export class CardsViewPluginView extends ItemView {
   }
 
   getDisplayText() {
-    return "Cards View";
+    return "Cards View (Beta)";
   }
 
   async onOpen() {
     const viewContent = this.containerEl.children[1];
-    console.log("Here is a viewContent :", viewContent);
     store.view.set(this);
 
     store.files.set(this.app.vault.getMarkdownFiles());

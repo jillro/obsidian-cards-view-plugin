@@ -105,9 +105,17 @@
 
   const renderFile = async (el: HTMLElement): Promise<void> => {
     const content = await file.vault.cachedRead(file);
-    MarkdownPreviewRenderer.registerPostProcessor(postProcessor);
-    await MarkdownRenderer.render($app, content, el, file.path, $view);
-    MarkdownPreviewRenderer.unregisterPostProcessor(postProcessor);
+    // TODO : Need to add the logic to detect frontmatter and show it.
+    if (content.trim().length > 0) {
+      MarkdownPreviewRenderer.registerPostProcessor(postProcessor);
+      await MarkdownRenderer.render($app, content, el, file.path, $view);
+      MarkdownPreviewRenderer.unregisterPostProcessor(postProcessor);
+    } else {
+      el.createEl("div", {
+				text: "File is Empty",
+				cls: "card-content-empty",
+			});
+    }
   };
 
   const togglePin = async () => {
@@ -117,7 +125,10 @@
   };
 
   const trashFile = async () => {
-    await file.vault.trash(file, true);
+    await file.vault.trash(
+      file,
+      $settings.toSystemTrash === "system" ? true : false,
+    );
   };
 
   const openFile = async () =>

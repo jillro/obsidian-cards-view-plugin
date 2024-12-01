@@ -1,7 +1,12 @@
 <!-- ./src/components/Root.svelte -->
 
 <script lang="ts">
-  import { debounce, Menu, SearchComponent, setIcon } from "obsidian";
+  import {
+    debounce,
+    Menu,
+    SearchComponent,
+    setIcon,
+  } from "obsidian";
   import { afterUpdate, onMount } from "svelte";
   import MiniMasonry from "minimasonry";
 
@@ -50,6 +55,14 @@
       item.setChecked($sort == Sort.Modified);
       item.onClick(async () => {
         $sort = Sort.Modified;
+      });
+    });
+    sortMenu.addSeparator();
+    sortMenu.addItem((item) => {
+      item.setTitle("Show empty notes");
+      item.setChecked($settings.showEmptyNotes);
+      item.onClick(async () => {
+        $settings.showEmptyNotes = !$settings.showEmptyNotes;
       });
     });
     sortMenu.showAtMouseEvent(event);
