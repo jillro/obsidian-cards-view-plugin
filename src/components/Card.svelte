@@ -142,6 +142,8 @@
   const pinButton = (element: HTMLElement) => setIcon(element, "pin");
   const trashIcon = (element: HTMLElement) => setIcon(element, "trash");
   const folderIcon = (element: HTMLElement) => setIcon(element, "folder");
+  const blankIcon = (element: HTMLElement) => setIcon(element, "blank");
+  const vaultIcon = (element: HTMLElement) => setIcon(element, "vault");
 
   const dispatch = createEventDispatcher();
   onMount(async () => {
@@ -173,7 +175,13 @@
       on:click|stopPropagation={togglePin}
     />
     {#if file.parent != null && file.parent.path !== "/"}
-      <div class="folder-name"><span use:folderIcon />{file.parent.path}</div>
+      <div class={folderIconClass}>
+        <span use:folderIcon />{file.parent.path}
+      </div>
+    {:else}
+      <div class={folderIconClass}>
+        <span use:vaultIcon />Root
+      </div>
     {/if}
     {#if $settings.showDeleteButton}
       <button
@@ -181,6 +189,8 @@
         use:trashIcon
         on:click|stopPropagation={trashFile}
       />
+    {:else}
+      <button class="clickable-icon" use:blankIcon />
     {/if}
   </div>
 </div>
