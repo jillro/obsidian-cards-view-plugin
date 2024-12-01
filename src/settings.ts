@@ -17,7 +17,6 @@ export enum DeleteFileMode {
 }
 
 export enum NoteOpenLayout {
-  Unknown = "unknown",
   Right = "right",
   NewTab = "tab",
   NewWindow = "window",
@@ -153,7 +152,6 @@ export class CardsViewSettingsTab extends PluginSettingTab {
       .addDropdown((dropdown) =>
         dropdown
           .addOptions({
-            [NoteOpenLayout.Unknown]: "Unknown",
             [NoteOpenLayout.Right]: "Open note on right side",
             [NoteOpenLayout.NewTab]: "Open note in new tab",
             [NoteOpenLayout.NewWindow]: "Open note in new window",

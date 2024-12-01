@@ -138,8 +138,6 @@
       await $app.workspace.getLeaf("tab").openFile(file);
     } else if ($settings.openNoteLayout === "window") {
       await $app.workspace.getLeaf("window").openFile(file);
-    } else if ($settings.openNoteLayout === "unknown") {
-      await $app.workspace.getLeaf(false).openFile(file);
     }
   };
 
