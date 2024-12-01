@@ -156,16 +156,20 @@
   class="card"
   style={cardStyle}
   class:skip-transition={$skipNextTransition}
-  on:click={openFile}
   role="link"
-  on:keydown={openFile}
   tabindex="0"
 >
   <div class="top-bar">
     {#if displayFilename}<div>{file.basename}</div>{/if}
   </div>
 
-  <div class="card-content" bind:this={contentDiv}></div>
+  <div
+    class="card-content"
+    on:dblclick={openFile}
+    on:keydown={openFile}
+    bind:this={contentDiv}
+    role="presentation"
+  ></div>
 
   <div class="card-info">
     <button
