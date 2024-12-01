@@ -127,7 +127,7 @@
   const trashFile = async () => {
     await file.vault.trash(
       file,
-      $settings.toSystemTrash === "system" ? true : false,
+      $settings.toSystemTrash !== "trash" ? true : false,
     );
   };
 
