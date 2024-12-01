@@ -130,6 +130,22 @@ export class CardsViewSettingsTab extends PluginSettingTab {
       );
 
     new Setting(containerEl)
+      .setName("Show parent folder name")
+      .setDesc(
+        "Disable this option to hide the parent folder from showing on the cards. Visible on mouse hover."
+      )
+      .addToggle((toggle) =>
+        toggle
+          .setValue(this.plugin.settings.showParentFolder)
+          .onChange(async (value) => {
+            this.plugin.settings.showParentFolder = value;
+            await this.plugin.saveSettings();
+          })
+      );
+
+    new Setting(containerEl).setName("Genearl features").setHeading();
+
+    new Setting(containerEl)
       .setName("Deleted files")
       .setDesc("What happens to a file after you delete it.")
       .addDropdown((dropdown) =>
