@@ -2,10 +2,10 @@
  * Required by Obsidian to load the plugin
  */
 
- .workspace-leaf-content[data-type="cards-view"] .view-content {
-     overflow: unset;
-     padding-block-start: 0 !important;
- }
+.workspace-leaf-content[data-type="cards-view"] .view-content {
+    overflow: unset;
+    padding-block-start: 0 !important;
+}
 
 /* Root.svelte */
 .action-bar {
@@ -261,4 +261,12 @@
 .card-content-empty {
     padding-block: 2rem;
     text-align: center;
+}
+
+.folder-name {
+    display: flex;
+    gap: 0.4rem;
+    align-items: center;
+    flex-wrap: wrap;
+    text-wrap: wrap;
 }
