@@ -13,7 +13,23 @@ export enum TitleDisplayMode {
 export enum DeleteFileMode {
   System = "system",
   Trash = "trash",
-  Permanent = "perm"
+  Permanent = "perm",
+}
+
+export enum NoteOpenLayout {
+  Right = "right",
+  NewTab = "tab",
+  NewWindow = "window",
+}
+
+export enum TagPostionForCardColor {
+  frontmatter = "front",
+  content = "content",
+}
+
+export interface TagSetting {
+  name: string;
+  color: string;
 }
 
 export interface CardsViewSettings {
@@ -23,8 +39,12 @@ export interface CardsViewSettings {
   showDeleteButton: boolean;
   displayTitle: TitleDisplayMode;
   showEmptyNotes: boolean;
+  showParentFolder: boolean;
   toSystemTrash: DeleteFileMode;
+  openNoteLayout: NoteOpenLayout;
+  tagPositionForCardColor: TagPostionForCardColor;
   pinnedFiles: string[];
+  tagColors: TagSetting[];
 }
 
 export const DEFAULT_SETTINGS: CardsViewSettings = {
@@ -34,8 +54,12 @@ export const DEFAULT_SETTINGS: CardsViewSettings = {
   showDeleteButton: true,
   displayTitle: TitleDisplayMode.Both,
   showEmptyNotes: false,
+  showParentFolder: true,
   toSystemTrash: DeleteFileMode.System,
+  openNoteLayout: NoteOpenLayout.Right,
+  tagPositionForCardColor: TagPostionForCardColor.content,
   pinnedFiles: [],
+  tagColors: [],
 };
 
 export class CardsViewSettingsTab extends PluginSettingTab {
@@ -49,6 +73,20 @@ export class CardsViewSettingsTab extends PluginSettingTab {
   display(): void {
     const { containerEl } = this;
     containerEl.empty();
+
+    new Setting(containerEl)
+      .setName("Launch on start")
+      .setDesc("Open the cards view when Obsidian starts")
+      .addToggle((toggle) =>
+        toggle
+          .setValue(this.plugin.settings.launchOnStart)
+          .onChange(async (value) => {
+            this.plugin.settings.launchOnStart = value;
+            await this.plugin.saveSettings();
+          })
+      );
+
+    new Setting(containerEl).setName("Cards UI").setHeading();
 
     new Setting(containerEl)
       .setName("Title display mode")
@@ -122,6 +160,22 @@ export class CardsViewSettingsTab extends PluginSettingTab {
       );
 
     new Setting(containerEl)
+      .setName("Show parent folder name")
+      .setDesc(
+        "Disable this option to hide the parent folder from showing on the cards. Visible on mouse hover."
+      )
+      .addToggle((toggle) =>
+        toggle
+          .setValue(this.plugin.settings.showParentFolder)
+          .onChange(async (value) => {
+            this.plugin.settings.showParentFolder = value;
+            await this.plugin.saveSettings();
+          })
+      );
+
+    new Setting(containerEl).setName("Genearl features").setHeading();
+
+    new Setting(containerEl)
       .setName("Deleted files")
       .setDesc("What happens to a file after you delete it.")
       .addDropdown((dropdown) =>
@@ -139,16 +193,82 @@ export class CardsViewSettingsTab extends PluginSettingTab {
       );
 
     new Setting(containerEl)
-      .setName("Launch on start")
-      .setDesc("Open the cards view when Obsidian starts")
-      .addToggle((toggle) =>
-        toggle
-          .setValue(this.plugin.settings.launchOnStart)
+      .setName("Open note layout")
+      .setDesc("Where should the note open.")
+      .addDropdown((dropdown) =>
+        dropdown
+          .addOptions({
+            [NoteOpenLayout.Right]: "Open note on right side",
+            [NoteOpenLayout.NewTab]: "Open note in new tab",
+            [NoteOpenLayout.NewWindow]: "Open note in new window",
+          })
+          .setValue(this.plugin.settings.openNoteLayout)
           .onChange(async (value) => {
-            this.plugin.settings.launchOnStart = value;
+            this.plugin.settings.openNoteLayout = value as NoteOpenLayout;
             await this.plugin.saveSettings();
           })
       );
+
+    new Setting(containerEl).setName("Cards color based on tag").setHeading();
+
+    new Setting(containerEl)
+      .setName("Where do you place the tags")
+      .setDesc(
+        "If you use frontmatter then create a property 'tags' and enter your tag name as value."
+      )
+      .addDropdown((dropdown) =>
+        dropdown
+          .addOptions({
+            [TagPostionForCardColor.content]: "In content",
+            [TagPostionForCardColor.frontmatter]: "In frontmatter",
+          })
+          .setValue(this.plugin.settings.tagPositionForCardColor)
+          .onChange(async (value) => {
+            this.plugin.settings.tagPositionForCardColor =
+              value as TagPostionForCardColor;
+            await this.plugin.saveSettings();
+          })
+      );
+
+    this.plugin.settings.tagColors.forEach((tag, index) => {
+      const setting = new Setting(containerEl)
+        .addText((text) =>
+          text
+            .setPlaceholder("Tag Name")
+            .setValue(tag.name)
+            .onChange(async (value) => {
+              this.plugin.settings.tagColors[index].name = value;
+              await this.plugin.saveSettings();
+            })
+        )
+        .addColorPicker((text) =>
+          text.setValue(tag.color).onChange(async (value) => {
+            this.plugin.settings.tagColors[index].color = value;
+            await this.plugin.saveSettings();
+          })
+        )
+        .addButton((button) =>
+          button
+            .setButtonText("Delete")
+            .setCta()
+            .onClick(async () => {
+              this.plugin.settings.tagColors.splice(index, 1);
+              await this.plugin.saveSettings();
+              this.display();
+            })
+        );
+    });
+
+    new Setting(containerEl).addButton((button) =>
+      button
+        .setButtonText("Add Tag")
+        .setCta()
+        .onClick(async () => {
+          this.plugin.settings.tagColors.push({ name: "", color: "" });
+          await this.plugin.saveSettings();
+          this.display();
+        })
+    );
 
     new Setting(containerEl)
       .setName("Reset settings")

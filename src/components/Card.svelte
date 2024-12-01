@@ -8,8 +8,8 @@
     setIcon,
     TFile,
   } from "obsidian";
-  import { createEventDispatcher, onMount } from "svelte";
-  import { skipNextTransition, app, view, settings } from "./store";
+  import { afterUpdate, createEventDispatcher, onMount } from "svelte";
+  import { skipNextTransition, app, view, settings, tags } from "./store";
   import { TitleDisplayMode } from "../settings";
   import type { Child } from "svelte-eslint-parser/lib/parser/compat";
 
@@ -18,11 +18,6 @@
   let contentDiv: HTMLElement;
   let pinned: boolean;
   $: pinned = $settings.pinnedFiles.includes(file.path);
-
-  // Compute style based on settings
-  $: cardStyle = $settings.maxCardHeight
-    ? `max-height: ${$settings.maxCardHeight}px; overflow: hidden; text-overflow: ellipsis;`
-    : "";
 
   function postProcessor(
     element: HTMLElement,
@@ -35,16 +30,14 @@
     }
 
     if (
-      $settings.displayTitle != TitleDisplayMode.Both &&
+      $settings.displayTitle == TitleDisplayMode.Filename &&
       element.children.length > 0 &&
       element.children[0].tagName === "H1" &&
       element.children[0].textContent
     ) {
-      if ($settings.displayTitle == TitleDisplayMode.Title) {
-        displayFilename = false;
-      } else if ($settings.displayTitle == TitleDisplayMode.Filename) {
-        element.children[0].remove();
-      }
+      element.children[0].remove();
+    } else if ($settings.displayTitle == TitleDisplayMode.Title) {
+      displayFilename = false;
     }
 
     if (element.children.length === 0) {
@@ -59,7 +52,7 @@
         element.children[i].getElementsByClassName("internal-embed").length ||
         element.children[i].className.includes("block-language-dataview")
       ) {
-        console.log("Adding shadow to embed note");
+        // console.log("Adding shadow to embed note");
         element.children[i].appendChild(
           document.createElement("div"),
         ).className = "embed-shadow";
@@ -112,9 +105,9 @@
       MarkdownPreviewRenderer.unregisterPostProcessor(postProcessor);
     } else {
       el.createEl("div", {
-				text: "File is Empty",
-				cls: "card-content-empty",
-			});
+        text: "File is Empty",
+        cls: "card-content-empty",
+      });
     }
   };
 
@@ -127,21 +120,87 @@
   const trashFile = async () => {
     await file.vault.trash(
       file,
-      $settings.toSystemTrash === "system" ? true : false,
+      $settings.toSystemTrash !== "trash" ? true : false,
     );
   };
 
-  const openFile = async () =>
-    await $app.workspace.getLeaf("tab").openFile(file);
+  const openFile = async () => {
+    if ($settings.openNoteLayout === "right") {
+      await $app.workspace.getLeaf("split", "vertical").openFile(file);
+    } else if ($settings.openNoteLayout === "tab") {
+      await $app.workspace.getLeaf("tab").openFile(file);
+    } else if ($settings.openNoteLayout === "window") {
+      await $app.workspace.getLeaf("window").openFile(file);
+    }
+  };
+
+  type TagSetting = {
+    name: string;
+    color: string;
+  };
+
+  let backgroundColor = "";
+
+  const updateBackgroundColor = async () => {
+    if (contentDiv && $settings.tagPositionForCardColor === "content") {
+      const content = contentDiv.textContent || contentDiv.innerText;
+      for (let tag of $settings.tagColors) {
+        if (content.includes("#" + tag.name)) {
+          backgroundColor = tag.color;
+          break;
+        }
+      }
+    } else {
+      // const frontmatter = parseFrontMatterTags(
+      //   getFrontMatterInfo(await file.vault.cachedRead(file)),
+      // );
+      // console.log("What is the value of frontmatter :", frontmatter);
+
+      // contentDiv.getElementsByClassName('token key atrule')
+      // const frontmatter = getFrontMatterInfo()
+
+      // Get frontmatter data from the file
+      // const frontmatter = metadataCache.getFileCache(file)?.frontmatter;
+      // console.log("Following is the frontmatter I got now :", frontmatter, " | For the file :", file.path);
+
+      // if (frontmatter && frontmatter.tags) {
+      //   const frontmatterTags = Array.isArray(frontmatter.tags)
+      //     ? frontmatter.tags // If tags are in an array format
+      //     : [frontmatter.tags]; // If tags are a single string
+
+      //   for (let tag of $settings.tagColors) {
+      //     if (frontmatterTags.includes(tag.name)) {
+      //       backgroundColor = tag.color;
+      //       break;
+      //     }
+      //   }
+      // }
+    }
+  };
+
+  // Compute style based on settings
+  $: cardStyle = $settings.maxCardHeight
+    ? `max-height: ${$settings.maxCardHeight}px; overflow: hidden; text-overflow: ellipsis; background-color: ${backgroundColor};`
+    : `background-color: ${backgroundColor};`;
+
+  $: folderIconClass = $settings.showParentFolder
+    ? "folder-name"
+    : "clickable-icon";
 
   const pinButton = (element: HTMLElement) => setIcon(element, "pin");
   const trashIcon = (element: HTMLElement) => setIcon(element, "trash");
   const folderIcon = (element: HTMLElement) => setIcon(element, "folder");
+  const blankIcon = (element: HTMLElement) => setIcon(element, "blank");
+  const vaultIcon = (element: HTMLElement) => setIcon(element, "vault");
 
   const dispatch = createEventDispatcher();
   onMount(async () => {
     await renderFile(contentDiv);
     dispatch("loaded");
+  });
+
+  afterUpdate(() => {
+    updateBackgroundColor();
   });
 </script>
 
@@ -149,16 +208,20 @@
   class="card"
   style={cardStyle}
   class:skip-transition={$skipNextTransition}
-  on:click={openFile}
   role="link"
-  on:keydown={openFile}
   tabindex="0"
 >
   <div class="top-bar">
     {#if displayFilename}<div>{file.basename}</div>{/if}
   </div>
 
-  <div class="card-content" bind:this={contentDiv}></div>
+  <div
+    class="card-content"
+    on:dblclick={openFile}
+    on:keydown={openFile}
+    bind:this={contentDiv}
+    role="presentation"
+  ></div>
 
   <div class="card-info">
     <button
@@ -168,7 +231,13 @@
       on:click|stopPropagation={togglePin}
     />
     {#if file.parent != null && file.parent.path !== "/"}
-      <div class="folder-name"><span use:folderIcon />{file.parent.path}</div>
+      <div class={folderIconClass}>
+        <span use:folderIcon />{file.parent.path}
+      </div>
+    {:else}
+      <div class={folderIconClass}>
+        <span use:vaultIcon />Root
+      </div>
     {/if}
     {#if $settings.showDeleteButton}
       <button
@@ -176,6 +245,8 @@
         use:trashIcon
         on:click|stopPropagation={trashFile}
       />
+    {:else}
+      <button class="clickable-icon" use:blankIcon />
     {/if}
   </div>
 </div>
