@@ -59,7 +59,7 @@
         element.children[i].getElementsByClassName("internal-embed").length ||
         element.children[i].className.includes("block-language-dataview")
       ) {
-        console.log("Adding shadow to embed note");
+        // console.log("Adding shadow to embed note");
         element.children[i].appendChild(
           document.createElement("div"),
         ).className = "embed-shadow";
@@ -112,9 +112,9 @@
       MarkdownPreviewRenderer.unregisterPostProcessor(postProcessor);
     } else {
       el.createEl("div", {
-				text: "File is Empty",
-				cls: "card-content-empty",
-			});
+        text: "File is Empty",
+        cls: "card-content-empty",
+      });
     }
   };
 
@@ -131,8 +131,17 @@
     );
   };
 
-  const openFile = async () =>
-    await $app.workspace.getLeaf("tab").openFile(file);
+  const openFile = async () => {
+    if ($settings.openNoteLayout === "right") {
+      await $app.workspace.getLeaf("split", "vertical").openFile(file);
+    } else if ($settings.openNoteLayout === "tab") {
+      await $app.workspace.getLeaf("tab").openFile(file);
+    } else if ($settings.openNoteLayout === "window") {
+      await $app.workspace.getLeaf("window").openFile(file);
+    } else if ($settings.openNoteLayout === "unknown") {
+      await $app.workspace.getLeaf(false).openFile(file);
+    }
+  };
 
   const pinButton = (element: HTMLElement) => setIcon(element, "pin");
   const trashIcon = (element: HTMLElement) => setIcon(element, "trash");

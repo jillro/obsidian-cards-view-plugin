@@ -97,12 +97,6 @@ const createFilteredFiles = () =>
       const nonEmptyFiles = [];
       for (const file of $sortedFiles) {
         const emptiness = (await isEmptyFile(file));
-        console.log(
-          "Following is the file :",
-          file,
-          " | Following value returned by isEmptyFile() :",
-          emptiness,
-        );
         if ($settings.showEmptyNotes || !emptiness) {
           nonEmptyFiles.push(file);
         }
@@ -124,8 +118,8 @@ export const displayedFiles = derived(
   },
 );
 
-displayedCount.subscribe((count) => console.log("Displayed Count:", count));
-displayedFiles.subscribe((files) => console.log("Displayed Files:", files));
+// displayedCount.subscribe((count) => console.log("Displayed Count:", count));
+// displayedFiles.subscribe((files) => console.log("Displayed Files:", files));
 
 export const viewIsVisible = writable(false);
 export const skipNextTransition = writable(true);

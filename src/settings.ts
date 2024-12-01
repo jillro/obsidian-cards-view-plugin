@@ -13,7 +13,14 @@ export enum TitleDisplayMode {
 export enum DeleteFileMode {
   System = "system",
   Trash = "trash",
-  Permanent = "perm"
+  Permanent = "perm",
+}
+
+export enum NoteOpenLayout {
+  Unknown = "unknown",
+  Right = "right",
+  NewTab = "tab",
+  NewWindow = "window",
 }
 
 export interface CardsViewSettings {
@@ -24,6 +31,7 @@ export interface CardsViewSettings {
   displayTitle: TitleDisplayMode;
   showEmptyNotes: boolean;
   toSystemTrash: DeleteFileMode;
+  openNoteLayout: NoteOpenLayout;
   pinnedFiles: string[];
 }
 
@@ -35,6 +43,7 @@ export const DEFAULT_SETTINGS: CardsViewSettings = {
   displayTitle: TitleDisplayMode.Both,
   showEmptyNotes: false,
   toSystemTrash: DeleteFileMode.System,
+  openNoteLayout: NoteOpenLayout.Right,
   pinnedFiles: [],
 };
 
@@ -134,6 +143,24 @@ export class CardsViewSettingsTab extends PluginSettingTab {
           .setValue(this.plugin.settings.toSystemTrash)
           .onChange(async (value) => {
             this.plugin.settings.toSystemTrash = value as DeleteFileMode;
+            await this.plugin.saveSettings();
+          })
+      );
+
+    new Setting(containerEl)
+      .setName("Open note layout")
+      .setDesc("Where should the note open.")
+      .addDropdown((dropdown) =>
+        dropdown
+          .addOptions({
+            [NoteOpenLayout.Unknown]: "Unknown",
+            [NoteOpenLayout.Right]: "Open note on right side",
+            [NoteOpenLayout.NewTab]: "Open note in new tab",
+            [NoteOpenLayout.NewWindow]: "Open note in new window",
+          })
+          .setValue(this.plugin.settings.openNoteLayout)
+          .onChange(async (value) => {
+            this.plugin.settings.openNoteLayout = value as NoteOpenLayout;
             await this.plugin.saveSettings();
           })
       );
