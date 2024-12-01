@@ -59,7 +59,7 @@
         element.children[i].getElementsByClassName("internal-embed").length ||
         element.children[i].className.includes("block-language-dataview")
       ) {
-        console.log("Adding shadow to embed note");
+        // console.log("Adding shadow to embed note");
         element.children[i].appendChild(
           document.createElement("div"),
         ).className = "embed-shadow";
