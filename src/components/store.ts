@@ -8,8 +8,9 @@ import {
   MetadataCache,
   prepareFuzzySearch,
   TFile,
+  getFrontMatterInfo,
 } from "obsidian";
-import { derived, get, writable } from "svelte/store";
+import { derived, get, readable, writable } from "svelte/store";
 import type { CardsViewSettings } from "../settings";
 
 export enum Sort {
@@ -28,7 +29,7 @@ export const sortedFiles = derived(
   [sort, files, settings],
   ([$sort, $files, $settings]) =>
     [...$files]
-      .filter((file: TFile) => !file.path.endsWith(".excalidraw.md")) // Exclude .excalidraw.md files
+      .filter((file: TFile) => !file.path.endsWith(".excalidraw.md"))
       .sort(
         (a: TFile, b: TFile) =>
           ($settings.pinnedFiles.includes(b.path) ? 1 : 0) -
@@ -42,6 +43,7 @@ export const searchQuery = writable<string>("");
 export const preparedSearch = derived(searchQuery, ($searchQuery) =>
   $searchQuery ? prepareFuzzySearch($searchQuery) : null,
 );
+
 export const searchResultFiles = derived(
   [preparedSearch, sortedFiles, appCache],
   ([$preparedSearch, $sortedFiles, $appCache], set) => {
@@ -78,11 +80,48 @@ export const searchResultFiles = derived(
   get(sortedFiles),
 );
 
+// Helper function to determine if a file is empty
+const isEmptyFile = async (file: TFile) => {
+  const content = await file.vault.cachedRead(file);
+  const frontMatter = getFrontMatterInfo(content).exists
+    ? getFrontMatterInfo(content).frontmatter
+    : "";
+  return content.replace(`---\n${frontMatter}\n---`, "").trim().length === 0;
+};
+
+// Async filter for non-empty files
+const createFilteredFiles = () =>
+  readable<TFile[]>([], (set) => {
+    const unsubscribe = sortedFiles.subscribe(async ($sortedFiles) => {
+      const $settings = get(settings);
+      const nonEmptyFiles = [];
+      for (const file of $sortedFiles) {
+        const emptiness = (await isEmptyFile(file));
+        console.log(
+          "Following is the file :",
+          file,
+          " | Following value returned by isEmptyFile() :",
+          emptiness,
+        );
+        if ($settings.showEmptyNotes || !emptiness) {
+          nonEmptyFiles.push(file);
+        }
+      }
+      set(nonEmptyFiles);
+    });
+    return unsubscribe;
+  });
+
+export const filteredFiles = createFilteredFiles();
+
 export const displayedCount = writable(50);
+
 export const displayedFiles = derived(
-  [searchResultFiles, displayedCount],
-  ([$searchResultFiles, $displayedCount]) =>
-    $searchResultFiles.slice(0, $displayedCount),
+  [filteredFiles, searchResultFiles, displayedCount, searchQuery],
+  ([$filteredFiles, $searchResultFiles, $displayedCount, $searchQuery]) => {
+    const filesToDisplay = $searchQuery ? $searchResultFiles : $filteredFiles;
+    return filesToDisplay.slice(0, $displayedCount);
+  },
 );
 
 displayedCount.subscribe((count) => console.log("Displayed Count:", count));
