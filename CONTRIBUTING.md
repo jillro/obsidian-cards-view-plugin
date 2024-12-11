@@ -26,8 +26,9 @@ might not be accepted.
 Please make sure that your code is clean and well documented. If you are not sure about something, feel free to ask. Please
 also make sure that your code is tested.
 
-Please follow the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) guidelines
-for your commit messages.
+Please keep a clean commit history and follow the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/)
+guidelines  for your commit messages. This will male it easier to understand what your pull request is about,
+and to generate a changelog.
 
 Do not add changes in your pull request that are not directly related to the issue you are working on.
 Do not move files, add dependencies, or change the structure of the project in any way without first discussing it.
