@@ -10,6 +10,7 @@ export enum TitleDisplayMode {
 export interface CardsViewSettings {
   minCardWidth: number;
   launchOnStart: boolean;
+  showDeleteButton: boolean;
   displayTitle: TitleDisplayMode;
   pinnedFiles: string[];
 }
@@ -17,6 +18,7 @@ export interface CardsViewSettings {
 export const DEFAULT_SETTINGS: CardsViewSettings = {
   minCardWidth: 200,
   launchOnStart: false,
+  showDeleteButton: true,
   displayTitle: TitleDisplayMode.Both,
   pinnedFiles: [],
 };
@@ -64,6 +66,20 @@ export class CardsViewSettingsTab extends PluginSettingTab {
           .setValue(this.plugin.settings.displayTitle)
           .onChange(async (value) => {
             this.plugin.settings.displayTitle = value as TitleDisplayMode;
+            await this.plugin.saveSettings();
+          }),
+      );
+
+    new Setting(containerEl)
+      .setName("Show delete button")
+      .setDesc(
+        "Disable this option to remove the delete button, so you dont delete any note accidentally."
+      )
+      .addToggle((toggle) =>
+        toggle
+          .setValue(this.plugin.settings.showDeleteButton)
+          .onChange(async (value) => {
+            this.plugin.settings.showDeleteButton = value;
             await this.plugin.saveSettings();
           }),
       );
