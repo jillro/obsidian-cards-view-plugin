@@ -17,11 +17,6 @@
   let pinned: boolean;
   $: pinned = $settings.pinnedFiles.includes(file.path);
 
-  // Compute style based on settings
-  $: cardStyle = $settings.maxCardHeight
-    ? `max-height: ${$settings.maxCardHeight}px; overflow: hidden; text-overflow: ellipsis;`
-    : "";
-
   function postProcessor(
     element: HTMLElement,
     context: MarkdownPostProcessorContext,
@@ -133,7 +128,6 @@
 
 <div
   class="card"
-  style={cardStyle}
   class:skip-transition={$skipNextTransition}
   on:click={openFile}
   role="link"
