@@ -1,5 +1,4 @@
 import esbuildSvelte from "esbuild-svelte";
-import sveltePreprocess from "svelte-preprocess";
 import esbuild from "esbuild";
 import process from "process";
 import { builtinModules } from "node:module";
@@ -19,7 +18,7 @@ const context = await esbuild.context({
         css: "injected",
         ...(prod ? {} : { enableSourcemap: true }),
       },
-      preprocess: sveltePreprocess(...(prod ? [] : [{ sourceMap: true }])),
+      sourceMap: !prod,
       filterWarnings: (warning) => warning.code !== "css-unused-selector",
     }),
   ],
@@ -50,6 +49,7 @@ const context = await esbuild.context({
   sourcemap: prod ? false : "inline",
   treeShaking: true,
   outfile: "main.js",
+  minify: prod,
 });
 
 if (prod) {

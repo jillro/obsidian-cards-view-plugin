@@ -35,10 +35,7 @@ export default class CardsViewPlugin extends Plugin {
       },
     });
 
-    this.registerView(
-      VIEW_TYPE,
-      (leaf) => new CardsViewPluginView(this.settings, leaf),
-    );
+    this.registerView(VIEW_TYPE, (leaf) => new CardsViewPluginView(leaf));
 
     this.app.workspace.onLayoutReady(() => {
       if (this.settings.launchOnStart) {
