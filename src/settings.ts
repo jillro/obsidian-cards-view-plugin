@@ -73,7 +73,7 @@ export class CardsViewSettingsTab extends PluginSettingTab {
     new Setting(containerEl)
       .setName("Show delete button")
       .setDesc(
-        "Disable this option to remove the delete button, so you dont delete any note accidentally."
+        "Disable this option to remove the delete button, so you dont delete any note accidentally.",
       )
       .addToggle((toggle) =>
         toggle
