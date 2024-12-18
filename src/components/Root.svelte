@@ -1,6 +1,6 @@
 <script lang="ts">
   import { debounce, Menu, SearchComponent, setIcon } from "obsidian";
-  import { afterUpdate, onMount } from "svelte";
+  import { onMount, tick } from "svelte";
   import MiniMasonry from "minimasonry";
 
   import Card from "./Card.svelte";
@@ -16,9 +16,7 @@
   } from "./store";
 
   let notesGrid: MiniMasonry;
-  let viewContent: HTMLElement;
   let cardsContainer: HTMLElement;
-  let columns: number;
 
   const sortIcon = (element: HTMLElement) => {
     setIcon(element, "arrow-down-wide-narrow");
@@ -54,7 +52,6 @@
   }
 
   onMount(() => {
-    columns = Math.floor(viewContent.clientWidth / $settings.minCardWidth);
     notesGrid = new MiniMasonry({
       container: cardsContainer,
       baseWidth: $settings.minCardWidth,
@@ -62,6 +59,7 @@
       surroundingGutter: false,
       ultimateGutter: 20,
     });
+    $skipNextTransition = true;
     notesGrid.layout();
 
     return () => {
@@ -69,39 +67,44 @@
     };
   });
 
-  afterUpdate(
-    debounce(async () => {
-      if (!$viewIsVisible) {
-        $skipNextTransition = true;
-        return;
-      }
+  const updateLayoutNextTick = () => {
+    if (!$viewIsVisible) {
+      $skipNextTransition = true;
+      return;
+    }
 
-      notesGrid.layout();
-      $skipNextTransition = false;
-    }),
-  );
+    tick().then(
+      debounce(async () => {
+        notesGrid.layout();
+        $skipNextTransition = false;
+      }),
+    );
+  };
+
+  $effect(updateLayoutNextTick);
 </script>
 
-<div class="action-bar" bind:this={viewContent}>
-  <button class="clickable-icon sort-button" use:sortIcon on:click={sortMenu} />
-  <div class="action-bar__search" use:searchInput />
+<div class="action-bar">
+  <button
+    class="clickable-icon sort-button"
+    use:sortIcon
+    onclick={sortMenu}
+    aria-label="Sort"
+  ></button>
+  <div class="action-bar__search" use:searchInput></div>
   <div class="action-bar__tags">
     <div class="action-bar__tags__list">
       {#each $tags as tag}
-        <button class="action-bar__tag" on:click={() => ($searchQuery = tag)}
+        <button class="action-bar__tag" onclick={() => ($searchQuery = tag)}
           >{tag}</button
         >
       {/each}
     </div>
   </div>
 </div>
-<div
-  class="cards-container"
-  bind:this={cardsContainer}
-  style:--columns={columns}
->
+<div class="cards-container" bind:this={cardsContainer}>
   {#each $displayedFiles as file (file.path + file.stat.mtime)}
-    <Card {file} on:loaded={() => notesGrid.layout()} />
+    <Card {file} {updateLayoutNextTick} />
   {/each}
 </div>
 

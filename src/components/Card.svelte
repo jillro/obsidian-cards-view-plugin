@@ -6,16 +6,21 @@
     setIcon,
     TFile,
   } from "obsidian";
-  import { createEventDispatcher, onMount } from "svelte";
+  import { onMount } from "svelte";
   import { skipNextTransition, app, view, settings } from "./store";
   import { TitleDisplayMode } from "../settings";
-  import type { Child } from "svelte-eslint-parser/lib/parser/compat";
+  import { assert, is } from "tsafe";
 
-  export let file: TFile;
-  let displayFilename: boolean = true;
+  interface Props {
+    file: TFile;
+    updateLayoutNextTick: () => void;
+  }
+
+  let { file, updateLayoutNextTick }: Props = $props();
   let contentDiv: HTMLElement;
-  let pinned: boolean;
-  $: pinned = $settings.pinnedFiles.includes(file.path);
+  let pinned: boolean = $derived($settings.pinnedFiles.includes(file.path));
+  // This will depend both on the settings and the content of the file
+  let displayFilename: boolean = $state(true);
 
   function postProcessor(
     element: HTMLElement,
@@ -52,7 +57,6 @@
         element.children[i].getElementsByClassName("internal-embed").length ||
         element.children[i].className.includes("block-language-dataview")
       ) {
-        console.log("Adding shadow to embed note");
         element.children[i].appendChild(
           document.createElement("div"),
         ).className = "embed-shadow";
@@ -89,9 +93,11 @@
 
     const lastElText = element.children[lastBlockIndex].lastChild?.textContent;
     if (lastElText != null) {
+      const lastChild = element.children[lastBlockIndex].lastChild;
+      assert(!is<null>(lastChild));
+      assert(!is<null>(lastElText));
       const cut = Math.min(50, 200 - (charCount - lastElText.length));
-      (element.children[lastBlockIndex].lastChild as Child).textContent =
-        `${lastElText.slice(0, cut)} ...`;
+      lastChild.textContent = `${lastElText.slice(0, cut)} ...`;
     }
   }
 
@@ -102,13 +108,16 @@
     MarkdownPreviewRenderer.unregisterPostProcessor(postProcessor);
   };
 
-  const togglePin = async () => {
+  const togglePin = async (e: Event) => {
+    e.stopPropagation();
     $settings.pinnedFiles = pinned
       ? $settings.pinnedFiles.filter((f) => f !== file.path)
       : [...$settings.pinnedFiles, file.path];
+    updateLayoutNextTick();
   };
 
-  const trashFile = async () => {
+  const trashFile = async (e: Event) => {
+    e.stopPropagation();
     await file.vault.trash(file, true);
   };
 
@@ -119,38 +128,44 @@
   const trashIcon = (element: HTMLElement) => setIcon(element, "trash");
   const folderIcon = (element: HTMLElement) => setIcon(element, "folder");
 
-  const dispatch = createEventDispatcher();
-  onMount(async () => {
-    await renderFile(contentDiv);
-    dispatch("loaded");
+  onMount(() => {
+    (async () => {
+      await renderFile(contentDiv);
+      updateLayoutNextTick();
+    })();
+    return () => updateLayoutNextTick();
   });
 </script>
 
 <div
   class="card"
   class:skip-transition={$skipNextTransition}
-  on:click={openFile}
+  onclick={openFile}
   role="link"
-  on:keydown={openFile}
+  onkeydown={openFile}
   tabindex="0"
 >
   {#if displayFilename}<h1>{file.basename}</h1>{/if}
-  <div bind:this={contentDiv} />
+  <div bind:this={contentDiv}></div>
   <div class="card-info">
     <button
       class="clickable-icon"
       class:is-active={pinned}
       use:pinButton
-      on:click|stopPropagation={togglePin}
-    />
+      onclick={togglePin}
+      aria-label="Pin file"
+    ></button>
     {#if file.parent != null && file.parent.path !== "/"}
-      <div class="folder-name"><span use:folderIcon />{file.parent.path}</div>
+      <div class="folder-name">
+        <span use:folderIcon></span>{file.parent.path}
+      </div>
     {/if}
     <button
       class="clickable-icon"
       use:trashIcon
-      on:click|stopPropagation={trashFile}
-    />
+      onclick={trashFile}
+      aria-label="Delete file"
+    ></button>
   </div>
 </div>
 
@@ -203,7 +218,7 @@
   /* Images embeds alone in a paragraph */
   .card :global(p:has(> span.image-embed):not(:has(br)) span.image-embed) {
     display: block;
-    & img {
+    & :global(img) {
       display: block;
     }
   }
@@ -235,7 +250,7 @@
     border-color: var(--background-modifier-border-hover);
   }
 
-  .card h3 {
+  .card :global(h3) {
     word-wrap: break-word;
   }
 

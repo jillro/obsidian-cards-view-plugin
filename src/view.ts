@@ -1,20 +1,12 @@
-import { ItemView, TAbstractFile, TFile, WorkspaceLeaf } from "obsidian";
-import type { CardsViewSettings } from "./settings";
+import { ItemView, TAbstractFile, TFile } from "obsidian";
 import Root from "./components/Root.svelte";
 import store, { Sort } from "./components/store";
 import { get } from "svelte/store";
+import { mount } from "svelte";
 
 export const VIEW_TYPE = "cards-view";
 
 export class CardsViewPluginView extends ItemView {
-  private settings: CardsViewSettings;
-  private svelteRoot?: Root;
-
-  constructor(settings: CardsViewSettings, leaf: WorkspaceLeaf) {
-    super(leaf);
-    this.settings = settings;
-  }
-
   getViewType() {
     return VIEW_TYPE;
   }
@@ -69,7 +61,7 @@ export class CardsViewPluginView extends ItemView {
       ),
     );
 
-    this.svelteRoot = new Root({
+    mount(Root, {
       target: viewContent,
     });
 

@@ -2,7 +2,7 @@
 	"id": "cards-view",
 	"name": "Cards View",
 	"version": "1.7.0",
-	"minAppVersion": "0.15.0",
+	"minAppVersion": "1.6.5",
 	"description": "Displays a card view of your notes.",
 	"author": "Maud Royer",
 	"authorUrl": "https://maudroyer.fr",
