@@ -97,6 +97,7 @@
     }
 
     tick().then(debouncedLayout);
+    $skipNextTransition = false;
   };
 </script>
 
