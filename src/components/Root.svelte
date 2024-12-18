@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { debounce, Menu, SearchComponent, setIcon } from "obsidian";
-  import { afterUpdate, onMount } from "svelte";
+  import { Menu, SearchComponent, setIcon } from "obsidian";
+  import { onMount, tick } from "svelte";
   import MiniMasonry from "minimasonry";
 
   import Card from "./Card.svelte";
@@ -16,9 +16,7 @@
   } from "./store";
 
   let notesGrid: MiniMasonry;
-  let viewContent: HTMLElement;
   let cardsContainer: HTMLElement;
-  let columns: number;
 
   const sortIcon = (element: HTMLElement) => {
     setIcon(element, "arrow-down-wide-narrow");
@@ -54,7 +52,6 @@
   }
 
   onMount(() => {
-    columns = Math.floor(viewContent.clientWidth / $settings.minCardWidth);
     notesGrid = new MiniMasonry({
       container: cardsContainer,
       baseWidth: $settings.minCardWidth,
@@ -62,6 +59,7 @@
       surroundingGutter: false,
       ultimateGutter: 20,
     });
+    $skipNextTransition = true;
     notesGrid.layout();
 
     return () => {
@@ -69,39 +67,61 @@
     };
   });
 
-  afterUpdate(
-    debounce(async () => {
-      if (!$viewIsVisible) {
-        $skipNextTransition = true;
-        return;
-      }
+  let layoutTimeout: NodeJS.Timeout | null = null;
+  const debouncedLayout = () => {
+    // If there has been a relayout call in the last 100ms,
+    // we schedule another one in 100ms to avoid layout thrashing
+    // If one is already schedule, we cancel it and schedule a new one
+    if (layoutTimeout) {
+      clearTimeout(layoutTimeout);
+      layoutTimeout = setTimeout(() => {
+        notesGrid.layout();
+        if (layoutTimeout) clearTimeout(layoutTimeout);
+      }, 100);
+      return;
+    }
 
-      notesGrid.layout();
-      $skipNextTransition = false;
-    }),
-  );
+    // Otherwise, relayout immediately
+    notesGrid.layout();
+    layoutTimeout = setTimeout(() => {
+      if (layoutTimeout) clearTimeout(layoutTimeout);
+    }, 100);
+  };
+
+  const updateLayoutNextTick = (transition = false) => {
+    if (!$viewIsVisible) {
+      $skipNextTransition = true;
+      return;
+    } else {
+      $skipNextTransition = !transition;
+    }
+
+    tick().then(debouncedLayout);
+    $skipNextTransition = false;
+  };
 </script>
 
-<div class="action-bar" bind:this={viewContent}>
-  <button class="clickable-icon sort-button" use:sortIcon on:click={sortMenu} />
-  <div class="action-bar__search" use:searchInput />
+<div class="action-bar">
+  <button
+    class="clickable-icon sort-button"
+    use:sortIcon
+    onclick={sortMenu}
+    aria-label="Sort"
+  ></button>
+  <div class="action-bar__search" use:searchInput></div>
   <div class="action-bar__tags">
     <div class="action-bar__tags__list">
       {#each $tags as tag}
-        <button class="action-bar__tag" on:click={() => ($searchQuery = tag)}
+        <button class="action-bar__tag" onclick={() => ($searchQuery = tag)}
           >{tag}</button
         >
       {/each}
     </div>
   </div>
 </div>
-<div
-  class="cards-container"
-  bind:this={cardsContainer}
-  style:--columns={columns}
->
+<div class="cards-container" bind:this={cardsContainer}>
   {#each $displayedFiles as file (file.path + file.stat.mtime)}
-    <Card {file} on:loaded={() => notesGrid.layout()} />
+    <Card {file} {updateLayoutNextTick} />
   {/each}
 </div>
 
