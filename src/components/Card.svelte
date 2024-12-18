@@ -13,7 +13,7 @@
 
   interface Props {
     file: TFile;
-    updateLayoutNextTick: () => void;
+    updateLayoutNextTick: (transition: boolean) => void;
   }
 
   let { file, updateLayoutNextTick }: Props = $props();
@@ -113,12 +113,13 @@
     $settings.pinnedFiles = pinned
       ? $settings.pinnedFiles.filter((f) => f !== file.path)
       : [...$settings.pinnedFiles, file.path];
-    updateLayoutNextTick();
+    updateLayoutNextTick(true);
   };
 
   const trashFile = async (e: Event) => {
     e.stopPropagation();
     await file.vault.trash(file, true);
+    updateLayoutNextTick(true);
   };
 
   const openFile = async () =>
@@ -131,9 +132,9 @@
   onMount(() => {
     (async () => {
       await renderFile(contentDiv);
-      updateLayoutNextTick();
+      updateLayoutNextTick(false);
     })();
-    return () => updateLayoutNextTick();
+    return () => updateLayoutNextTick(false);
   });
 </script>
 

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { debounce, Menu, SearchComponent, setIcon } from "obsidian";
+  import { Menu, SearchComponent, setIcon } from "obsidian";
   import { onMount, tick } from "svelte";
   import MiniMasonry from "minimasonry";
 
@@ -67,21 +67,37 @@
     };
   });
 
-  const updateLayoutNextTick = () => {
-    if (!$viewIsVisible) {
-      $skipNextTransition = true;
+  let layoutTimeout: NodeJS.Timeout | null = null;
+  const debouncedLayout = () => {
+    // If there has been a relayout call in the last 100ms,
+    // we schedule another one in 100ms to avoid layout thrashing
+    // If one is already schedule, we cancel it and schedule a new one
+    if (layoutTimeout) {
+      clearTimeout(layoutTimeout);
+      layoutTimeout = setTimeout(() => {
+        notesGrid.layout();
+        if (layoutTimeout) clearTimeout(layoutTimeout);
+      }, 100);
       return;
     }
 
-    tick().then(
-      debounce(async () => {
-        notesGrid.layout();
-        $skipNextTransition = false;
-      }),
-    );
+    // Otherwise, relayout immediately
+    notesGrid.layout();
+    layoutTimeout = setTimeout(() => {
+      if (layoutTimeout) clearTimeout(layoutTimeout);
+    }, 100);
   };
 
-  $effect(updateLayoutNextTick);
+  const updateLayoutNextTick = (transition = false) => {
+    if (!$viewIsVisible) {
+      $skipNextTransition = true;
+      return;
+    } else {
+      $skipNextTransition = !transition;
+    }
+
+    tick().then(debouncedLayout);
+  };
 </script>
 
 <div class="action-bar">
