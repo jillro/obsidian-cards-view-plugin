@@ -1,15 +1,18 @@
 @precedence {
+    Not
+    subExpression
     or @left
     SearchOperator @left
 }
 
 @top Program { expression }
 
-expression { And | Or | Not }
+expression { And | Or }
 
-And { subExpression+ }
+And { subExpressionOrNot+ }
 Or { expression !or orOperator expression }
 Not { "-" subExpression }
+subExpressionOrNot { subExpression | Not }
 subExpression { term | "(" expression ")" }
 term { text | searchOperator | PropertyOperator }
 text { Word | Quote | Regex }
