@@ -139,8 +139,9 @@
   <div class="action-bar__tags">
     <div class="action-bar__tags__list">
       {#each $tags as tag}
-        <button class="action-bar__tag" onclick={() => ($searchQuery = tag)}
-          >{tag}</button
+        <button
+          class="action-bar__tag"
+          onclick={() => ($searchQuery = `tag:${tag}`)}>{tag}</button
         >
       {/each}
     </div>

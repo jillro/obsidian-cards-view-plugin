@@ -37,17 +37,27 @@ export const sortedFiles = derived(
 export const searchQuery = writable<string>("");
 export const searchCaseSensitive = writable(false);
 export const searchResultFiles = derived(
-  [searchQuery, searchCaseSensitive, sortedFiles, appCache, app],
+  [settings, searchQuery, searchCaseSensitive, sortedFiles, appCache, app],
   (
-    [$searchQuery, $searchCaseSensitive, $sortedFiles, $appCache, $app],
+    [
+      $settings,
+      $searchQuery,
+      $searchCaseSensitive,
+      $sortedFiles,
+      $appCache,
+      $app,
+    ],
     set,
   ) => {
-    if ($searchQuery === "") {
+    const query = $settings.baseQuery
+      ? $settings.baseQuery + " " + $searchQuery
+      : $searchQuery;
+    if (query === "") {
       set($sortedFiles);
       return;
     }
 
-    const filter = generateFilter($searchQuery);
+    const filter = generateFilter(query);
 
     Promise.all(
       $sortedFiles.map(async (file) => {
