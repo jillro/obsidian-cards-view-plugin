@@ -5,6 +5,9 @@
 	"main": "main.js",
 	"scripts": {
 		"dev": "node esbuild.config.mjs",
+		"prebuild": "npm run lezer",
+		"postinstall": "npm run lezer",
+		"lezer": "lezer-generator src/search/search.grammar -o src/search/grammar.js",
 		"build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
 		"version": "node version-bump.mjs && git add manifest.json versions.json",
 		"lint": "eslint && prettier --check **/*.mjs **/*.ts **/*.svelte"
@@ -26,6 +29,7 @@
 		"eslint-config-prettier": "^9.1.0",
 		"eslint-plugin-svelte": "^2.45.1",
 		"globals": "^15.13.0",
+		"lezer-generator": "^0.13.4",
 		"obsidian": "latest",
 		"prettier": "^3.3.3",
 		"prettier-plugin-svelte": "^3.2.6",
@@ -33,8 +37,10 @@
 		"svelte-eslint-parser": "^0.43.0",
 		"tsafe": "^1.8.5",
 		"tslib": "^2.6.2",
+		"tsx": "^4.19.2",
 		"typescript": "^5.5.0",
-		"typescript-eslint": "^8.18.0"
+		"typescript-eslint": "^8.18.0",
+		"vitest": "^2.1.8"
 	},
 	"dependencies": {
 		"minimasonry": "^1.3.2"
