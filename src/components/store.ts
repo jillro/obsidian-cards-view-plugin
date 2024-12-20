@@ -4,11 +4,11 @@ import {
   getAllTags,
   ItemView,
   MetadataCache,
-  prepareFuzzySearch,
   TFile,
 } from "obsidian";
 import { derived, get, writable } from "svelte/store";
 import type { CardsViewSettings } from "../settings";
+import generateFilter from "../search/search";
 
 export enum Sort {
   Created = "ctime",
@@ -35,40 +35,40 @@ export const sortedFiles = derived(
 );
 
 export const searchQuery = writable<string>("");
-export const preparedSearch = derived(searchQuery, ($searchQuery) =>
-  $searchQuery ? prepareFuzzySearch($searchQuery) : null,
-);
+export const searchCaseSensitive = writable(false);
 export const searchResultFiles = derived(
-  [preparedSearch, sortedFiles, appCache],
-  ([$preparedSearch, $sortedFiles, $appCache], set) => {
-    if ($preparedSearch == null) {
+  [searchQuery, searchCaseSensitive, sortedFiles, appCache, app],
+  (
+    [$searchQuery, $searchCaseSensitive, $sortedFiles, $appCache, $app],
+    set,
+  ) => {
+    if ($searchQuery === "") {
       set($sortedFiles);
       return;
     }
+
+    const filter = generateFilter($searchQuery);
 
     Promise.all(
       $sortedFiles.map(async (file) => {
         const content = await file.vault.cachedRead(file);
         const tags =
           getAllTags($appCache.getFileCache(file) as CachedMetadata) || [];
-        return [
-          $preparedSearch(content),
-          $preparedSearch(file.name),
-          $preparedSearch(`#${tags.join(" #")}`),
-        ];
+
+        let frontmatter;
+        await $app.fileManager.processFrontMatter(file, (fm) => {
+          frontmatter = fm;
+        });
+        return filter({
+          file,
+          content,
+          tags,
+          frontmatter,
+          caseSensitive: $searchCaseSensitive,
+        });
       }),
     ).then((searchResults) => {
-      set(
-        $sortedFiles.filter((file, index) => {
-          const [contentMatch, nameMatch, tagsMatch] = searchResults[index];
-
-          return (
-            (contentMatch && contentMatch.score > -2) ||
-            (nameMatch && nameMatch.score > -2) ||
-            (tagsMatch && tagsMatch.score > -2)
-          );
-        }),
-      );
+      set($sortedFiles.filter((file, index) => searchResults[index]));
     });
   },
   get(sortedFiles),
@@ -110,6 +110,7 @@ export default {
   files,
   sort,
   searchQuery,
+  searchCaseSensitive,
   searchResultFiles,
   displayedCount,
   displayedFiles,

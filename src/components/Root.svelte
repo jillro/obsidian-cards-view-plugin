@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Menu, SearchComponent, setIcon } from "obsidian";
+  import { Menu, setIcon } from "obsidian";
   import { onMount, tick } from "svelte";
   import MiniMasonry from "minimasonry";
 
@@ -8,6 +8,7 @@
     tags,
     displayedFiles,
     searchQuery,
+    searchCaseSensitive,
     skipNextTransition,
     Sort,
     sort,
@@ -22,14 +23,8 @@
     setIcon(element, "arrow-down-wide-narrow");
   };
 
-  const searchInput = (element: HTMLElement) => {
-    const searchInput = new SearchComponent(element);
-    searchInput.onChange((value) => {
-      $searchQuery = value;
-    });
-    searchQuery.subscribe((value) => {
-      searchInput.inputEl.value = value;
-    });
+  const caseSensitiveIcon = (element: HTMLElement) => {
+    setIcon(element, "case-sensitive");
   };
 
   function sortMenu(event: MouseEvent) {
@@ -108,7 +103,39 @@
     onclick={sortMenu}
     aria-label="Sort"
   ></button>
-  <div class="action-bar__search" use:searchInput></div>
+  <div class="action-bar__search">
+    <div class="search-input-container">
+      <input
+        enterkeyhint="search"
+        type="search"
+        spellcheck="false"
+        bind:value={$searchQuery}
+      />
+      <div
+        class="search-input-clear-button"
+        onclick={() => ($searchQuery = "")}
+        onkeydown={(e) => {
+          e.stopPropagation();
+          $searchQuery = "";
+        }}
+        role="button"
+        tabindex="0"
+      ></div>
+      <div
+        class="input-right-decorator clickable-icon"
+        class:is-active={$searchCaseSensitive}
+        aria-label="Case sensitive search"
+        use:caseSensitiveIcon
+        onclick={() => ($searchCaseSensitive = !$searchCaseSensitive)}
+        role="button"
+        tabindex="0"
+        onkeydown={(e) => {
+          e.stopPropagation();
+          $searchCaseSensitive = !$searchCaseSensitive;
+        }}
+      ></div>
+    </div>
+  </div>
   <div class="action-bar__tags">
     <div class="action-bar__tags__list">
       {#each $tags as tag}
