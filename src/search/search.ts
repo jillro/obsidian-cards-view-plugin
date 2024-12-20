@@ -6,7 +6,7 @@ import type { TFile } from "obsidian";
 type FilterFn = (params: {
   file?: TFile;
   content?: string;
-  tags?: string[];
+  tags?: string[]; // Without the # prefix
   frontmatter?: object;
   caseSensitive?: boolean;
 }) => Promise<boolean>;
@@ -22,9 +22,9 @@ function getAndFilter(input: string, cursor: TreeCursor): FilterFn {
   if (!cursor.firstChild()) {
     return async () => true;
   }
-  filters.push(getTermFilter(input, cursor));
+  filters.push(getExpressionFilter(input, cursor));
   while (cursor.nextSibling()) {
-    filters.push(getTermFilter(input, cursor));
+    filters.push(getExpressionFilter(input, cursor));
   }
 
   cursor.parent();
@@ -37,9 +37,9 @@ function getOrFilter(input: string, cursor: TreeCursor): FilterFn {
   if (!cursor.firstChild()) {
     return async () => true;
   }
-  filters.push(expressionFilter(input, cursor));
+  filters.push(getExpressionFilter(input, cursor));
   while (cursor.nextSibling()) {
-    filters.push(expressionFilter(input, cursor));
+    filters.push(getExpressionFilter(input, cursor));
   }
 
   cursor.parent();
@@ -229,7 +229,7 @@ function getTermFilter(input: string, cursor: TreeCursor): FilterFn {
     if (!cursor.firstChild()) {
       return async () => true;
     }
-    const termFilter = expressionFilter(input, cursor);
+    const termFilter = getExpressionFilter(input, cursor);
     cursor.parent();
     return async ({
       content,
@@ -304,7 +304,7 @@ function getTermFilter(input: string, cursor: TreeCursor): FilterFn {
   return async () => true;
 }
 
-function expressionFilter(input: string, cursor: TreeCursor): FilterFn {
+function getExpressionFilter(input: string, cursor: TreeCursor): FilterFn {
   if (cursor.node.type.name === "And") {
     return getAndFilter(input, cursor);
   }
@@ -313,7 +313,14 @@ function expressionFilter(input: string, cursor: TreeCursor): FilterFn {
     return getOrFilter(input, cursor);
   }
 
-  return async () => true;
+  if (cursor.node.type.name === "Not") {
+    cursor.firstChild();
+    const filter = getExpressionFilter(input, cursor);
+    cursor.parent();
+    return async (params) => !(await filter(params));
+  }
+
+  return getTermFilter(input, cursor);
 }
 
 export default function generateFilter(input: string): FilterFn {
@@ -322,5 +329,6 @@ export default function generateFilter(input: string): FilterFn {
   if (!cursor.firstChild()) {
     return async () => true;
   }
-  return expressionFilter(input, cursor);
+
+  return getExpressionFilter(input, cursor);
 }

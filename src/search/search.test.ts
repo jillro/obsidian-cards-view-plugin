@@ -49,6 +49,21 @@ describe("search", async () => {
       assert.equal(await filter({ content: "ipsum" }), false);
     });
 
+    await test("-lorem", async () => {
+      const query = "-lorem";
+      const filter = generateFilter(query);
+      assert.equal(await filter({ content: "lorem ipsum" }), false);
+      assert.equal(await filter({ content: "Lorem" }), false);
+      assert.equal(await filter({ content: "ipsum" }), true);
+    });
+
+    await test("lorem ipsum OR dolor sic", async () => {
+      const query = "lorem ipsum OR dolor sic";
+      const filter = generateFilter(query);
+      assert.equal(await filter({ content: "lorem ipsum" }), true);
+      assert.equal(await filter({ content: "dolor sic" }), true);
+    });
+
     await test("lorem in filename", async () => {
       const query = "lorem";
       const filter = generateFilter(query);
@@ -72,6 +87,24 @@ describe("search", async () => {
       assert.equal(await filter({ content: "ipsum" }), true);
       assert.equal(await filter({ content: "lorem" }), true);
       assert.equal(await filter({ content: "dolor" }), false);
+    });
+
+    await test("-(lorem OR ipsum)", async () => {
+      const query = "-(lorem OR ipsum)";
+      const filter = generateFilter(query);
+      assert.equal(await filter({ content: "lorem ipsum" }), false);
+      assert.equal(await filter({ content: "ipsum" }), false);
+      assert.equal(await filter({ content: "lorem" }), false);
+      assert.equal(await filter({ content: "dolor" }), true);
+    });
+
+    await test("lorem -(ipsum OR dolor)", async () => {
+      const query = "lorem -(ipsum OR dolor)";
+      const filter = generateFilter(query);
+      assert.equal(await filter({ content: "lorem" }), true);
+      assert.equal(await filter({ content: "lorem ipsum" }), false);
+      assert.equal(await filter({ content: "lorem dolor" }), false);
+      assert.equal(await filter({ content: "sic amet" }), false);
     });
 
     await test("lorem ipsum OR dolor", async () => {
@@ -194,6 +227,13 @@ describe("search", async () => {
 
     await test("tag:lorem", async () => {
       const query = "tag:lorem";
+      const filter = generateFilter(query);
+      assert.equal(await filter({ tags: ["lorem"] }), true);
+      assert.equal(await filter({ tags: ["ipsum"] }), false);
+    });
+
+    await test("tag:#lorem", async () => {
+      const query = "tag:#lorem";
       const filter = generateFilter(query);
       assert.equal(await filter({ tags: ["lorem"] }), true);
       assert.equal(await filter({ tags: ["ipsum"] }), false);

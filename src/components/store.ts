@@ -52,8 +52,9 @@ export const searchResultFiles = derived(
     Promise.all(
       $sortedFiles.map(async (file) => {
         const content = await file.vault.cachedRead(file);
-        const tags =
-          getAllTags($appCache.getFileCache(file) as CachedMetadata) || [];
+        const tags = (
+          getAllTags($appCache.getFileCache(file) as CachedMetadata) || []
+        ).map((t) => t.replace(/^#/, ""));
 
         let frontmatter;
         await $app.fileManager.processFrontMatter(file, (fm) => {
