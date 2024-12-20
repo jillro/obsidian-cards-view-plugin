@@ -8,6 +8,7 @@ export enum TitleDisplayMode {
 }
 
 export interface CardsViewSettings {
+  baseQuery: string;
   minCardWidth: number;
   launchOnStart: boolean;
   displayTitle: TitleDisplayMode;
@@ -15,6 +16,7 @@ export interface CardsViewSettings {
 }
 
 export const DEFAULT_SETTINGS: CardsViewSettings = {
+  baseQuery: "",
   minCardWidth: 200,
   launchOnStart: false,
   displayTitle: TitleDisplayMode.Both,
@@ -32,6 +34,21 @@ export class CardsViewSettingsTab extends PluginSettingTab {
   display(): void {
     const { containerEl } = this;
     containerEl.empty();
+
+    new Setting(containerEl)
+      .setName("Base search query")
+      .setDesc(
+        "Use this for example to exclude tags, folders or keywords from the view.",
+      )
+      .addText((text) =>
+        text
+          .setPlaceholder('-path:"Folder name/" -tag:hidden')
+          .setValue(this.plugin.settings.baseQuery)
+          .onChange(async (value) => {
+            this.plugin.settings.baseQuery = value;
+            await this.plugin.saveSettings();
+          }),
+      );
 
     new Setting(containerEl)
       .setName("Minimum card width")
