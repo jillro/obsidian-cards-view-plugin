@@ -262,5 +262,13 @@ describe("search", async () => {
       assert.equal(await filter({ frontmatter: { lorem: "dolor" } }), true);
       assert.equal(await filter({ frontmatter: { lorem: "lorem" } }), false);
     });
+
+    await test("lorem OR (ipsum -tag:#Tag1)", async () => {
+      const query = "lorem OR (ipsum -tag:#Tag1)";
+      const filter = generateFilter(query);
+      assert.equal(await filter({ content: "lorem" }), true);
+      assert.equal(await filter({ content: "ipsum" }), true);
+      assert.equal(await filter({ tags: ["Tag1"], content: "ipsum" }), false);
+    });
   });
 });
