@@ -1,7 +1,7 @@
 {
 	"id": "cards-view",
 	"name": "Cards View",
-	"version": "1.8.0",
+	"version": "1.8.1",
 	"minAppVersion": "1.6.5",
 	"description": "Displays a card view of your notes.",
 	"author": "Maud Royer",
