@@ -10,7 +10,8 @@
 		"lezer": "lezer-generator src/search/search.grammar -o src/search/grammar.js",
 		"build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
 		"version": "node version-bump.mjs && git add manifest.json versions.json",
-		"lint": "eslint && prettier --check **/*.mjs **/*.ts **/*.svelte"
+		"lint": "eslint && prettier --check **/*.mjs **/*.ts **/*.svelte",
+		"test": "node --test --require tsx/cjs $(find . -name \"*.test.ts\")"
 	},
 	"keywords": [],
 	"author": "",
