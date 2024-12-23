@@ -1,5 +1,6 @@
 import CardsViewPlugin from "./main";
 import { App, Notice, PluginSettingTab, Setting } from "obsidian";
+import { settings } from "./components/store";
 
 export enum TitleDisplayMode {
   Both = "Both",
@@ -44,9 +45,11 @@ export class CardsViewSettingsTab extends PluginSettingTab {
         text
           .setPlaceholder('-path:"Folder name/" -tag:hidden')
           .setValue(this.plugin.settings.baseQuery)
-          .onChange(async (value) => {
-            this.plugin.settings.baseQuery = value;
-            await this.plugin.saveSettings();
+          .onChange((value) => {
+            settings.update((s) => ({
+              ...s,
+              baseQuery: value,
+            }));
           }),
       );
 
@@ -57,14 +60,16 @@ export class CardsViewSettingsTab extends PluginSettingTab {
         text
           .setPlaceholder("200")
           .setValue(this.plugin.settings.minCardWidth.toString())
-          .onChange(async (value) => {
+          .onChange((value) => {
             if (isNaN(parseInt(value))) {
               new Notice("Invalid number");
               return;
             }
 
-            this.plugin.settings.minCardWidth = parseInt(value);
-            await this.plugin.saveSettings();
+            settings.update((s) => ({
+              ...s,
+              minCardWidth: parseInt(value),
+            }));
           }),
       );
 
@@ -79,9 +84,11 @@ export class CardsViewSettingsTab extends PluginSettingTab {
             [TitleDisplayMode.Filename]: "Filename",
           })
           .setValue(this.plugin.settings.displayTitle)
-          .onChange(async (value) => {
-            this.plugin.settings.displayTitle = value as TitleDisplayMode;
-            await this.plugin.saveSettings();
+          .onChange((value) => {
+            settings.update((s) => ({
+              ...s,
+              displayTitle: value as TitleDisplayMode,
+            }));
           }),
       );
 
@@ -91,9 +98,11 @@ export class CardsViewSettingsTab extends PluginSettingTab {
       .addToggle((toggle) =>
         toggle
           .setValue(this.plugin.settings.launchOnStart)
-          .onChange(async (value) => {
-            this.plugin.settings.launchOnStart = value;
-            await this.plugin.saveSettings();
+          .onChange((value) => {
+            settings.update((s) => ({
+              ...s,
+              launchOnStart: value,
+            }));
           }),
       );
 
@@ -101,10 +110,8 @@ export class CardsViewSettingsTab extends PluginSettingTab {
       .setName("Reset settings")
       .setDesc("Reset all settings to default")
       .addButton((button) =>
-        button.setButtonText("Reset").onClick(async () => {
-          this.plugin.settings = DEFAULT_SETTINGS;
-          await this.plugin.saveSettings();
-          this.display();
+        button.setButtonText("Reset").onClick(() => {
+          settings.set(DEFAULT_SETTINGS);
         }),
       );
   }

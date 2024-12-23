@@ -15,6 +15,10 @@ export default class CardsViewPlugin extends Plugin {
     store.settings.subscribe(async () => await this.saveSettings());
     store.app.set(this.app);
     store.settings.set(this.settings);
+    store.settings.subscribe(async (settings) => {
+      this.settings = settings;
+      await this.saveSettings();
+    });
     store.appCache.set(this.app.metadataCache);
     this.registerEvent(
       this.app.metadataCache.on("resolved", async () =>
