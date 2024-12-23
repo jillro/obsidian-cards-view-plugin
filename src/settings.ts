@@ -14,6 +14,7 @@ export interface CardsViewSettings {
   launchOnStart: boolean;
   displayTitle: TitleDisplayMode;
   pinnedFiles: string[];
+  savedSearch?: string[];
 }
 
 export const DEFAULT_SETTINGS: CardsViewSettings = {
