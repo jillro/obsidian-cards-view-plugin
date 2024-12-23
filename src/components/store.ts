@@ -36,28 +36,30 @@ export const sortedFiles = derived(
 
 export const searchQuery = writable<string>("");
 export const searchCaseSensitive = writable(false);
-export const searchResultFiles = derived(
-  [settings, searchQuery, searchCaseSensitive, sortedFiles, appCache, app],
-  (
-    [
-      $settings,
-      $searchQuery,
-      $searchCaseSensitive,
-      $sortedFiles,
-      $appCache,
-      $app,
-    ],
-    set,
-  ) => {
+const searchFilter = derived(
+  [settings, searchQuery],
+  ([$settings, $searchQuery]) => {
     const query = $settings.baseQuery
       ? $settings.baseQuery + " " + $searchQuery
       : $searchQuery;
+
     if (query === "") {
+      return null;
+    }
+
+    return generateFilter(query);
+  },
+);
+export const searchResultFiles = derived(
+  [searchFilter, searchCaseSensitive, sortedFiles, appCache, app],
+  (
+    [$searchFilter, $searchCaseSensitive, $sortedFiles, $appCache, $app],
+    set,
+  ) => {
+    if ($searchFilter === null) {
       set($sortedFiles);
       return;
     }
-
-    const filter = generateFilter(query);
 
     Promise.all(
       $sortedFiles.map(async (file) => {
@@ -70,7 +72,7 @@ export const searchResultFiles = derived(
         await $app.fileManager.processFrontMatter(file, (fm) => {
           frontmatter = fm;
         });
-        return filter({
+        return $searchFilter({
           file,
           content,
           tags,
@@ -79,6 +81,10 @@ export const searchResultFiles = derived(
         });
       }),
     ).then((searchResults) => {
+      // avoid race conditions
+      if ($searchFilter !== get(searchFilter)) {
+        return;
+      }
       set($sortedFiles.filter((file, index) => searchResults[index]));
     });
   },
