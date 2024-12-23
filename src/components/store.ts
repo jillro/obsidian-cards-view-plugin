@@ -85,7 +85,7 @@ export const searchResultFiles = derived(
       if ($searchFilter !== get(searchFilter)) {
         return;
       }
-      set($sortedFiles.filter((file, index) => searchResults[index]));
+      set($sortedFiles.filter((_, index) => searchResults[index]));
     });
   },
   get(sortedFiles),
@@ -101,28 +101,6 @@ export const displayedFiles = derived(
 export const viewIsVisible = writable(false);
 export const skipNextTransition = writable(true);
 
-export const tags = derived(
-  [displayedFiles, appCache],
-  ([$displayedFiles, $appCache]) => {
-    const tags = $displayedFiles
-      .map(
-        (file) =>
-          getAllTags($appCache.getFileCache(file) as CachedMetadata) || [],
-      )
-      .flat();
-
-    const tagCounts = tags.reduce(
-      (acc, tag) => {
-        acc[tag] = (acc[tag] || 0) + 1;
-        return acc;
-      },
-      {} as Record<string, number>,
-    );
-
-    return Object.keys(tagCounts).sort((a, b) => tagCounts[b] - tagCounts[a]);
-  },
-);
-
 export default {
   files,
   sort,
@@ -133,7 +111,6 @@ export default {
   displayedFiles,
   viewIsVisible,
   skipNextTransition,
-  tags,
   app,
   view,
   settings,

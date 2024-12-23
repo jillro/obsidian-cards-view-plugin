@@ -5,7 +5,6 @@
 
   import Card from "./Card.svelte";
   import {
-    tags,
     displayedFiles,
     searchQuery,
     searchCaseSensitive,
@@ -26,6 +25,17 @@
   const caseSensitiveIcon = (element: HTMLElement) => {
     setIcon(element, "case-sensitive");
   };
+
+  const starIcon = (element: HTMLElement) => {
+    setIcon(element, "star");
+  };
+
+  function toggleSavedSearch(search: string) {
+    if (!search) return;
+    $settings.savedSearch = $settings.savedSearch?.includes(search)
+      ? $settings.savedSearch.filter((s) => s !== search)
+      : [...($settings.savedSearch || []), search];
+  }
 
   function sortMenu(event: MouseEvent) {
     const sortMenu = new Menu();
@@ -124,24 +134,42 @@
       <div
         class="input-right-decorator clickable-icon"
         class:is-active={$searchCaseSensitive}
+        role="checkbox"
         aria-label="Case sensitive search"
+        aria-checked={$searchCaseSensitive}
         use:caseSensitiveIcon
         onclick={() => ($searchCaseSensitive = !$searchCaseSensitive)}
-        role="button"
         tabindex="0"
-        onkeydown={(e) => {
+        onkeydown={(e: Event) => {
           e.stopPropagation();
           $searchCaseSensitive = !$searchCaseSensitive;
         }}
       ></div>
+      {#if $searchQuery}
+        <div
+          class="input-right-decorator clickable-icon"
+          class:is-active={$settings.savedSearch?.includes($searchQuery)}
+          role="checkbox"
+          aria-label="Save search"
+          aria-checked={$settings.savedSearch?.includes($searchQuery)}
+          use:starIcon
+          onclick={() => toggleSavedSearch($searchQuery)}
+          tabindex="0"
+          onkeydown={(e: Event) => {
+            e.stopPropagation();
+            toggleSavedSearch($searchQuery);
+          }}
+          style="transform: translateY(-50%) translateX(-100%)"
+        ></div>
+      {/if}
     </div>
   </div>
   <div class="action-bar__tags">
     <div class="action-bar__tags__list">
-      {#each $tags as tag}
+      {#each $settings.savedSearch || [] as savedSearch}
         <button
           class="action-bar__tag"
-          onclick={() => ($searchQuery = `tag:${tag}`)}>{tag}</button
+          onclick={() => ($searchQuery = savedSearch)}>{savedSearch}</button
         >
       {/each}
     </div>
