@@ -14,7 +14,7 @@
 		"test": "node --test --require tsx/cjs $(find . -name \"*.test.ts\")"
 	},
 	"keywords": [],
-	"author": "",
+	"author": "Maud Royer <hello@maudroyer.fr>",
 	"license": "MIT",
 	"devDependencies": {
 		"@eslint/js": "^9.16.0",
