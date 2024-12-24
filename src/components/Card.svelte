@@ -7,13 +7,14 @@
     TFile,
   } from "obsidian";
   import { onMount } from "svelte";
-  import { skipNextTransition, app, view, settings } from "./store";
+  import { fade } from "svelte/transition";
+  import { app, view, settings } from "./store";
   import { TitleDisplayMode } from "../settings";
   import { assert, is } from "tsafe";
 
   interface Props {
     file: TFile;
-    updateLayoutNextTick: (transition: boolean) => void;
+    updateLayoutNextTick: () => Promise<void>;
   }
 
   let { file, updateLayoutNextTick }: Props = $props();
@@ -21,6 +22,7 @@
   let pinned: boolean = $derived($settings.pinnedFiles.includes(file.path));
   // This will depend both on the settings and the content of the file
   let displayFilename: boolean = $state(true);
+  let translateTransition: boolean = $state(false);
 
   function postProcessor(
     element: HTMLElement,
@@ -110,16 +112,17 @@
 
   const togglePin = async (e: Event) => {
     e.stopPropagation();
+    e.preventDefault();
     $settings.pinnedFiles = pinned
       ? $settings.pinnedFiles.filter((f) => f !== file.path)
       : [...$settings.pinnedFiles, file.path];
-    updateLayoutNextTick(true);
+    await updateLayoutNextTick();
   };
 
   const trashFile = async (e: Event) => {
     e.stopPropagation();
     await file.vault.trash(file, true);
-    updateLayoutNextTick(true);
+    await updateLayoutNextTick();
   };
 
   const openFile = async () =>
@@ -132,15 +135,17 @@
   onMount(() => {
     (async () => {
       await renderFile(contentDiv);
-      updateLayoutNextTick(false);
+      await updateLayoutNextTick();
+      translateTransition = true;
     })();
-    return () => updateLayoutNextTick(false);
+    return () => updateLayoutNextTick();
   });
 </script>
 
 <div
   class="card"
-  class:skip-transition={$skipNextTransition}
+  class:transition={translateTransition}
+  transition:fade
   onclick={openFile}
   role="link"
   onkeydown={openFile}
@@ -179,13 +184,11 @@
     word-wrap: break-word;
     overflow-y: hidden;
     margin: 0;
-    transition-property: transform;
-    transition-duration: 0.4s;
-    transform: translate(0, 100vh);
   }
 
-  .card.skip-transition {
-    transition: none;
+  .card.transition {
+    transition-property: transform;
+    transition-duration: 0.4s;
   }
 
   .card {

@@ -71,22 +71,12 @@ export class CardsViewPluginView extends ItemView {
         viewContent.scrollTop + viewContent.clientHeight >
         viewContent.scrollHeight - 500
       ) {
-        store.skipNextTransition.set(true);
         store.displayedCount.set(get(store.displayedFiles).length + 50);
       }
-    });
-
-    this.app.workspace.on("active-leaf-change", () => {
-      // check our leaf is visible
-      const rootLeaf = this.app.workspace.getMostRecentLeaf(
-        this.app.workspace.rootSplit,
-      );
-      store.viewIsVisible.set(rootLeaf?.view?.getViewType() === VIEW_TYPE);
     });
   }
 
   async onClose() {
-    store.viewIsVisible.set(false);
     store.searchQuery.set("");
     store.displayedCount.set(50);
     store.sort.set(Sort.Modified);
