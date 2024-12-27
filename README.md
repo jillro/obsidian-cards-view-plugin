@@ -23,6 +23,12 @@ This is a plugin for Obsidian.md that displays a card view of your notes.
 5. Click install
 6. Toggle the plugin on in the "Installed plugins" tab
 
+## Beta version
+
+This plugin offers beta versions that can be installed with [BRAT](https://github.com/TfTHacker/obsidian42-brat?tab=readme-ov-file).
+
+Please be aware that this versions may be unstable and have bugs, but you will have access to new features earlier.
+
 ## Contributing
 
 For major changes, please open an issue first to discuss what you would like to change.
