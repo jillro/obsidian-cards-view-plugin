@@ -71,7 +71,6 @@ export default class CardsViewPlugin extends Plugin {
     }
 
     await leaf.setViewState({ type: VIEW_TYPE, active: true });
-    store.viewIsVisible.set(true);
   }
 
   async saveSettings() {

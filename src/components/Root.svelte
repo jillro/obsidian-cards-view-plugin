@@ -8,10 +8,9 @@
     displayedFiles,
     searchQuery,
     searchCaseSensitive,
-    skipNextTransition,
+    searchResultLoadingState,
     Sort,
     sort,
-    viewIsVisible,
     settings,
   } from "./store";
 
@@ -63,8 +62,8 @@
       gutter: 20,
       surroundingGutter: false,
       ultimateGutter: 20,
+      wedge: true,
     });
-    $skipNextTransition = true;
     notesGrid.layout();
 
     return () => {
@@ -72,38 +71,40 @@
     };
   });
 
-  let layoutTimeout: NodeJS.Timeout | null = null;
+  let lastLayout: Date = new Date();
+  let pendingLayout: NodeJS.Timeout | null = null;
   const debouncedLayout = () => {
     // If there has been a relayout call in the last 100ms,
-    // we schedule another one in 100ms to avoid layout thrashing
-    // If one is already schedule, we cancel it and schedule a new one
-    if (layoutTimeout) {
-      clearTimeout(layoutTimeout);
-      layoutTimeout = setTimeout(() => {
-        notesGrid.layout();
-        if (layoutTimeout) clearTimeout(layoutTimeout);
-      }, 100);
-      return;
-    }
+    // we schedule another one 100ms later to avoid layout thrashing
+    return new Promise<void>((resolve) => {
+      if (
+        lastLayout.getTime() + 100 > new Date().getTime() &&
+        pendingLayout === null
+      ) {
+        pendingLayout = setTimeout(
+          () => {
+            notesGrid.layout();
+            lastLayout = new Date();
+            pendingLayout = null;
+            resolve();
+          },
+          lastLayout.getTime() + 100 - new Date().getTime(),
+        );
+        return;
+      }
 
-    // Otherwise, relayout immediately
-    notesGrid.layout();
-    layoutTimeout = setTimeout(() => {
-      if (layoutTimeout) clearTimeout(layoutTimeout);
-    }, 100);
+      // Otherwise, relayout immediately
+      notesGrid.layout();
+      lastLayout = new Date();
+      resolve();
+    });
   };
 
-  const updateLayoutNextTick = (transition = false) => {
-    if (!$viewIsVisible) {
-      $skipNextTransition = true;
-      return;
-    } else {
-      $skipNextTransition = !transition;
-    }
-
-    tick().then(debouncedLayout);
-    $skipNextTransition = false;
+  const updateLayoutNextTick = async () => {
+    await tick();
+    return await debouncedLayout();
   };
+  displayedFiles.subscribe(updateLayoutNextTick);
 </script>
 
 <div class="action-bar">
@@ -121,6 +122,10 @@
         spellcheck="false"
         bind:value={$searchQuery}
       />
+      <div
+        class="loading-bar"
+        style:--loading={`${(1 - $searchResultLoadingState) * 100}%`}
+      ></div>
       <div
         class="search-input-clear-button"
         onclick={() => ($searchQuery = "")}
@@ -258,6 +263,27 @@
       max-width: 300px;
       box-shadow: calc(0px - var(--size-4-5)) 0 var(--size-2-3) var(--size-2-3)
         var(--background-primary);
+    }
+
+    .search-input-container {
+      background-color: var(--background-primary);
+      z-index: 0;
+
+      & .loading-bar {
+        z-index: 1;
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        width: var(--loading);
+        background-color: var(--background-secondary);
+      }
+
+      & input {
+        background: transparent;
+        position: relative;
+        z-index: 2;
+      }
     }
   }
 
