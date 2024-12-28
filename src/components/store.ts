@@ -88,8 +88,6 @@ async function updateSearchResults() {
   let batch: Map<TFile, boolean> = new Map();
   let lastBatch = { date: new Date(), index: 0 };
   for (let i = 0; i < $sortedFiles.length; i++) {
-    if ($searchQuery !== get(searchQuery)) return;
-
     const file = $sortedFiles[i];
     const cachedResult = get(searchResultCache).get(cacheKey($sortedFiles[i]));
     if (cachedResult !== undefined) {
@@ -111,9 +109,13 @@ async function updateSearchResults() {
         frontmatter,
         caseSensitive: $searchCaseSensitive,
       });
+
+      if ($searchQuery !== get(searchQuery)) return;
       batch.set(file, match);
       searchResultCache.update((cache) => cache.set(cacheKey(file), match));
     }
+
+    if ($searchQuery !== get(searchQuery)) return;
 
     if (i % 10 === 0) {
       searchResultLoadingState.set(i / $sortedFiles.length);
