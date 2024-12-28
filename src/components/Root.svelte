@@ -279,6 +279,10 @@
         background-color: var(--background-secondary);
       }
 
+      & div:not(.loading-bar) {
+        z-index: 2;
+      }
+
       & input {
         background: transparent;
         position: relative;
