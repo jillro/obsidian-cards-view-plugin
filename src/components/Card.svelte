@@ -166,12 +166,13 @@
         <span use:folderIcon></span>{file.parent.path}
       </div>
     {/if}
-    <button
-      class="clickable-icon"
-      use:trashIcon
-      onclick={trashFile}
-      aria-label="Delete file"
-    ></button>
+    {#if $settings.showDeleteButton}
+      <button
+        class="clickable-icon"
+        use:trashIcon
+        on:click|stopPropagation={trashFile}
+      />
+    {/if}
   </div>
 </div>
 
