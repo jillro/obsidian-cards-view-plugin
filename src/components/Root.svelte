@@ -100,7 +100,7 @@
     });
   };
 
-  const updateLayoutNextTick = async () => {
+  export const updateLayoutNextTick = async () => {
     await tick();
     return await debouncedLayout();
   };
