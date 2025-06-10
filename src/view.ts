@@ -7,12 +7,18 @@ import { mount } from "svelte";
 export const VIEW_TYPE = "cards-view";
 
 export class CardsViewPluginView extends ItemView {
+  root: ReturnType<typeof Root> | undefined;
+
   getViewType() {
     return VIEW_TYPE;
   }
 
   getDisplayText() {
     return "Cards View";
+  }
+
+  onResize() {
+    this.root?.updateLayoutNextTick();
   }
 
   async onOpen() {
@@ -61,7 +67,7 @@ export class CardsViewPluginView extends ItemView {
       ),
     );
 
-    mount(Root, {
+    this.root = mount(Root, {
       target: viewContent,
     });
 
