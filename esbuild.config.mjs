@@ -1,6 +1,6 @@
 import esbuildSvelte from "esbuild-svelte";
+import { sveltePreprocess } from "svelte-preprocess";
 import esbuild from "esbuild";
-import process from "process";
 import { builtinModules } from "node:module";
 
 const banner = `/*
@@ -14,10 +14,8 @@ const prod = process.argv[2] === "production";
 const context = await esbuild.context({
   plugins: [
     esbuildSvelte({
-      compilerOptions: {
-        css: "injected",
-        ...(prod ? {} : { enableSourcemap: true }),
-      },
+      compilerOptions: { css: "injected" },
+      preprocess: sveltePreprocess(),
       sourceMap: !prod,
       filterWarnings: (warning) => warning.code !== "css-unused-selector",
     }),
@@ -54,7 +52,6 @@ const context = await esbuild.context({
 
 if (prod) {
   await context.rebuild();
-  process.exit(0);
 } else {
   await context.watch();
 }
