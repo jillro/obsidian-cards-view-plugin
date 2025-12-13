@@ -10,7 +10,7 @@
   import { fade } from "svelte/transition";
   import { app, view, settings } from "./store";
   import { TitleDisplayMode } from "../settings";
-  import { assert, is } from "tsafe";
+  import { extractPreviewContent } from "../utils/previewContent";
 
   interface Props {
     file: TFile;
@@ -19,6 +19,7 @@
 
   let { file, updateLayoutNextTick }: Props = $props();
   let contentDiv: HTMLElement;
+  let cardElement: HTMLElement;
   let pinned: boolean = $derived($settings.pinnedFiles.includes(file.path));
   // This will depend both on the settings and the content of the file
   let displayFilename: boolean = $state(true);
@@ -64,49 +65,13 @@
         ).className = "embed-shadow";
       }
     }
-
-    // Find block where to cut the preview
-    let lastBlockIndex: number = 0,
-      charCount: number = 0;
-    do {
-      charCount += element.children[lastBlockIndex]?.textContent?.length || 0;
-    } while (
-      lastBlockIndex < element.children.length &&
-      charCount < 200 &&
-      ++lastBlockIndex
-    );
-
-    // Remove all blocks after the last block
-    for (let i = element.children.length - 1; i > lastBlockIndex; i--) {
-      element.children[i]?.remove();
-    }
-
-    if (charCount < 200) {
-      return;
-    }
-
-    // Cut the last block
-    if (
-      !element.children[lastBlockIndex].lastChild ||
-      element.children[lastBlockIndex].lastChild?.nodeType !== Node.TEXT_NODE
-    ) {
-      return;
-    }
-
-    const lastElText = element.children[lastBlockIndex].lastChild?.textContent;
-    if (lastElText != null) {
-      const lastChild = element.children[lastBlockIndex].lastChild;
-      assert(!is<null>(lastChild));
-      assert(!is<null>(lastElText));
-      const cut = Math.min(50, 200 - (charCount - lastElText.length));
-      lastChild.textContent = `${lastElText.slice(0, cut)} ...`;
-    }
   }
 
   const renderFile = async (el: HTMLElement): Promise<void> => {
-    const content = await file.vault.cachedRead(file);
+    const fullContent = await file.vault.cachedRead(file);
+    const previewContent = extractPreviewContent(fullContent);
     MarkdownPreviewRenderer.registerPostProcessor(postProcessor);
-    await MarkdownRenderer.render($app, content, el, file.path, $view);
+    await MarkdownRenderer.render($app, previewContent, el, file.path, $view);
     MarkdownPreviewRenderer.unregisterPostProcessor(postProcessor);
   };
 
@@ -143,6 +108,7 @@
 </script>
 
 <div
+  bind:this={cardElement}
   class="card"
   class:transition={translateTransition}
   transition:fade
@@ -152,7 +118,7 @@
   tabindex="0"
 >
   {#if displayFilename}<h1>{file.basename}</h1>{/if}
-  <div bind:this={contentDiv}></div>
+  <div class="card-content" bind:this={contentDiv}></div>
   <div class="card-info">
     <button
       class="clickable-icon"
@@ -182,8 +148,29 @@
     border: 1px solid var(--background-modifier-border);
     padding: var(--card-padding);
     word-wrap: break-word;
-    overflow-y: hidden;
+    overflow: hidden;
     margin: 0;
+  }
+
+  .card .card-content {
+    position: relative;
+    overflow-x: visible;
+    max-height: calc(var(--card-width) * 1.2);
+  }
+
+  .card .card-content::after {
+    content: "";
+    position: absolute;
+    top: calc((var(--card-width) * 1.2) - 3rem);
+    left: 0;
+    right: 0;
+    height: 3rem;
+    background: linear-gradient(
+      to bottom,
+      transparent 0%,
+      var(--background-primary-alt) 100%
+    );
+    pointer-events: none;
   }
 
   .card.transition {
@@ -259,6 +246,8 @@
   }
 
   .card .card-info {
+    position: relative;
+    z-index: 1;
     margin: calc(-1 * var(--card-padding));
     margin-top: 0;
     border-top: 1px solid var(--background-modifier-border);
