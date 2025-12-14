@@ -100,13 +100,13 @@ function ensureMinTableLines(truncated: string, fullContent: string): string {
   const MIN_TABLE_LINES = 10;
 
   // Find the last table in the truncated content
-  const lines = truncated.split("\n");
+  const truncatedLines = truncated.split("\n");
   let lastTableEndIndex = -1;
   let tableStartIndex = -1;
 
   // Scan backwards to find if we're inside a table
-  for (let i = lines.length - 1; i >= 0; i--) {
-    const line = lines[i].trim();
+  for (let i = truncatedLines.length - 1; i >= 0; i--) {
+    const line = truncatedLines[i].trim();
     // Table rows contain pipes (|)
     if (line.includes("|")) {
       if (lastTableEndIndex === -1) {
@@ -134,35 +134,48 @@ function ensureMinTableLines(truncated: string, fullContent: string): string {
   }
 
   // We need to extend to include more table lines
-  const linesNeeded = MIN_TABLE_LINES - currentTableLines;
+  // Strategy: Find the table start in full content, extract MIN_TABLE_LINES from there,
+  // and replace the partial table in truncated content
 
-  // Find where the truncated content ends in the full content
-  const truncatedLength = truncated.length;
-  const remainingContent = fullContent.slice(truncatedLength);
-  const remainingLines = remainingContent.split("\n");
+  const fullContentLines = fullContent.split("\n");
 
-  // Collect additional table lines
-  const additionalLines: string[] = [];
-  for (
-    let i = 0;
-    i < remainingLines.length && additionalLines.length < linesNeeded;
-    i++
-  ) {
-    const line = remainingLines[i];
-    additionalLines.push(line);
+  // Find where the table starts in the full content by matching the first table line
+  const firstTableLine = truncatedLines[tableStartIndex];
+  let fullTableStartIndex = -1;
+
+  for (let i = 0; i < fullContentLines.length; i++) {
+    if (fullContentLines[i] === firstTableLine) {
+      fullTableStartIndex = i;
+      break;
+    }
+  }
+
+  // If we can't find the table in full content, return as-is
+  if (fullTableStartIndex === -1) {
+    return truncated;
+  }
+
+  // Collect MIN_TABLE_LINES from the full content
+  const tableLines: string[] = [];
+  for (let i = fullTableStartIndex; i < fullContentLines.length; i++) {
+    const line = fullContentLines[i];
 
     // Stop if we hit a non-table line
     if (!line.trim().includes("|") && line.trim().length > 0) {
       break;
     }
+
+    if (line.trim().includes("|")) {
+      tableLines.push(line);
+      if (tableLines.length >= MIN_TABLE_LINES) {
+        break;
+      }
+    }
   }
 
-  // If we found additional table lines, append them
-  if (additionalLines.length > 0) {
-    return truncated + "\n" + additionalLines.join("\n");
-  }
-
-  return truncated;
+  // Build the result: content before table + complete table lines
+  const contentBeforeTable = truncatedLines.slice(0, tableStartIndex);
+  return contentBeforeTable.join("\n") + "\n" + tableLines.join("\n");
 }
 
 /**
