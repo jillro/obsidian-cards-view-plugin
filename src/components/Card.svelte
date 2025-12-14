@@ -19,7 +19,6 @@
 
   let { file, updateLayoutNextTick }: Props = $props();
   let contentDiv: HTMLElement;
-  let cardElement: HTMLElement;
   let pinned: boolean = $derived($settings.pinnedFiles.includes(file.path));
   // This will depend both on the settings and the content of the file
   let displayFilename: boolean = $state(true);
@@ -72,6 +71,7 @@
     const previewContent = extractPreviewContent(fullContent);
     MarkdownPreviewRenderer.registerPostProcessor(postProcessor);
     await MarkdownRenderer.render($app, previewContent, el, file.path, $view);
+    el.style.removeProperty("overflow-x");
     MarkdownPreviewRenderer.unregisterPostProcessor(postProcessor);
   };
 
@@ -108,7 +108,6 @@
 </script>
 
 <div
-  bind:this={cardElement}
   class="card"
   class:transition={translateTransition}
   transition:fade
