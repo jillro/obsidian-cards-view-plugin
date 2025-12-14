@@ -18,7 +18,8 @@
   let cardsContainer: HTMLElement;
   let cardWidth: number = $state(0);
 
-  function updateCardWidth() {
+  async function relayout() {
+    notesGrid.layout();
     // Get the first card's width, or use the baseWidth setting as fallback
     const firstCard = cardsContainer?.querySelector(".card") as HTMLElement;
     if (firstCard) {
@@ -26,6 +27,8 @@
     } else {
       cardWidth = $settings.minCardWidth;
     }
+    await tick();
+    notesGrid.layout();
   }
 
   const sortIcon = (element: HTMLElement) => {
@@ -75,8 +78,7 @@
       ultimateGutter: 20,
       wedge: true,
     });
-    notesGrid.layout();
-    updateCardWidth();
+    relayout();
 
     return () => {
       notesGrid.destroy();
@@ -88,14 +90,14 @@
   const debouncedLayout = () => {
     // If there has been a relayout call in the last 100ms,
     // we schedule another one 100ms later to avoid layout thrashing
-    return new Promise<void>((resolve) => {
+    return new Promise<void>((resolve, reject) => {
       if (
         lastLayout.getTime() + 100 > new Date().getTime() &&
         pendingLayout === null
       ) {
         pendingLayout = setTimeout(
-          () => {
-            notesGrid.layout();
+          async () => {
+            await relayout();
             lastLayout = new Date();
             pendingLayout = null;
             resolve();
@@ -106,16 +108,18 @@
       }
 
       // Otherwise, relayout immediately
-      notesGrid.layout();
-      lastLayout = new Date();
-      resolve();
+      relayout()
+        .then(() => {
+          lastLayout = new Date();
+          resolve();
+        })
+        .catch(reject);
     });
   };
 
   export const updateLayoutNextTick = async () => {
     await tick();
     await debouncedLayout();
-    updateCardWidth();
   };
   displayedFiles.subscribe(updateLayoutNextTick);
 </script>
