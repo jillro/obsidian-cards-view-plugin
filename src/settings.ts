@@ -37,6 +37,7 @@ export class CardsViewSettingsTab extends PluginSettingTab {
     const { containerEl } = this;
     containerEl.empty();
 
+    let baseQueryTimeout: NodeJS.Timeout | null = null;
     new Setting(containerEl)
       .setName("Base search query")
       .setDesc(
@@ -47,10 +48,17 @@ export class CardsViewSettingsTab extends PluginSettingTab {
           .setPlaceholder('-path:"Folder name/" -tag:hidden')
           .setValue(this.plugin.settings.baseQuery)
           .onChange((value) => {
-            settings.update((s) => ({
-              ...s,
-              baseQuery: value,
-            }));
+            // Debounce the base query changes to prevent freezing
+            if (baseQueryTimeout) {
+              clearTimeout(baseQueryTimeout);
+            }
+            baseQueryTimeout = setTimeout(() => {
+              settings.update((s) => ({
+                ...s,
+                baseQuery: value,
+              }));
+              baseQueryTimeout = null;
+            }, 300);
           }),
       );
 
