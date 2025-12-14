@@ -52,6 +52,7 @@ const context = await esbuild.context({
 
 if (prod) {
   await context.rebuild();
+  process.exit(0);
 } else {
   await context.watch();
 }
