@@ -59,6 +59,7 @@
         element.children[i].getElementsByClassName("internal-embed").length ||
         element.children[i].className.includes("block-language-dataview")
       ) {
+        element.style.removeProperty("overflow-x");
         element.children[i].appendChild(
           document.createElement("div"),
         ).className = "embed-shadow";
