@@ -40,6 +40,9 @@ export function extractPreviewContent(
   // Find a safe truncation point
   truncated = findSafeTruncationPoint(truncated);
 
+  // If we're inside a table, ensure at least 10 lines of the table are included
+  truncated = ensureMinTableLines(truncated, contentAfterFrontmatter);
+
   // Check if we're inside a code block and close it if needed
   truncated = closeUnclosedCodeBlocks(truncated);
 
@@ -85,6 +88,81 @@ function findSafeTruncationPoint(text: string): string {
 
   // If no good boundary found, just use the full text
   return text;
+}
+
+/**
+ * Ensures that if we're truncating inside a table, at least 10 lines of the table are included.
+ * @param truncated - The currently truncated content
+ * @param fullContent - The full content to potentially extend from
+ * @returns Extended content if inside a table with fewer than 10 lines, otherwise original truncated content
+ */
+function ensureMinTableLines(truncated: string, fullContent: string): string {
+  const MIN_TABLE_LINES = 10;
+
+  // Find the last table in the truncated content
+  const lines = truncated.split("\n");
+  let lastTableEndIndex = -1;
+  let tableStartIndex = -1;
+
+  // Scan backwards to find if we're inside a table
+  for (let i = lines.length - 1; i >= 0; i--) {
+    const line = lines[i].trim();
+    // Table rows contain pipes (|)
+    if (line.includes("|")) {
+      if (lastTableEndIndex === -1) {
+        lastTableEndIndex = i;
+      }
+      tableStartIndex = i;
+    } else if (lastTableEndIndex !== -1 && line.length > 0) {
+      // We've found a non-empty, non-table line after finding table content
+      // This means the table has ended
+      break;
+    }
+  }
+
+  // If we're not in a table, return as-is
+  if (tableStartIndex === -1 || lastTableEndIndex === -1) {
+    return truncated;
+  }
+
+  // Count table lines we currently have
+  const currentTableLines = lastTableEndIndex - tableStartIndex + 1;
+
+  // If we already have at least MIN_TABLE_LINES, return as-is
+  if (currentTableLines >= MIN_TABLE_LINES) {
+    return truncated;
+  }
+
+  // We need to extend to include more table lines
+  const linesNeeded = MIN_TABLE_LINES - currentTableLines;
+
+  // Find where the truncated content ends in the full content
+  const truncatedLength = truncated.length;
+  const remainingContent = fullContent.slice(truncatedLength);
+  const remainingLines = remainingContent.split("\n");
+
+  // Collect additional table lines
+  const additionalLines: string[] = [];
+  for (
+    let i = 0;
+    i < remainingLines.length && additionalLines.length < linesNeeded;
+    i++
+  ) {
+    const line = remainingLines[i];
+    additionalLines.push(line);
+
+    // Stop if we hit a non-table line
+    if (!line.trim().includes("|") && line.trim().length > 0) {
+      break;
+    }
+  }
+
+  // If we found additional table lines, append them
+  if (additionalLines.length > 0) {
+    return truncated + "\n" + additionalLines.join("\n");
+  }
+
+  return truncated;
 }
 
 /**
