@@ -16,6 +16,17 @@
 
   let notesGrid: MiniMasonry;
   let cardsContainer: HTMLElement;
+  let cardWidth: number = $state(0);
+
+  function updateCardWidth() {
+    // Get the first card's width, or use the baseWidth setting as fallback
+    const firstCard = cardsContainer?.querySelector(".card") as HTMLElement;
+    if (firstCard) {
+      cardWidth = firstCard.offsetWidth;
+    } else {
+      cardWidth = $settings.minCardWidth;
+    }
+  }
 
   const sortIcon = (element: HTMLElement) => {
     setIcon(element, "arrow-down-wide-narrow");
@@ -65,6 +76,7 @@
       wedge: true,
     });
     notesGrid.layout();
+    updateCardWidth();
 
     return () => {
       notesGrid.destroy();
@@ -102,7 +114,8 @@
 
   export const updateLayoutNextTick = async () => {
     await tick();
-    return await debouncedLayout();
+    await debouncedLayout();
+    updateCardWidth();
   };
   displayedFiles.subscribe(updateLayoutNextTick);
 </script>
@@ -180,7 +193,11 @@
     </div>
   </div>
 </div>
-<div class="cards-container" bind:this={cardsContainer}>
+<div
+  class="cards-container"
+  bind:this={cardsContainer}
+  style:--card-width="{cardWidth}px"
+>
   {#each $displayedFiles as file (file.path + file.stat.mtime)}
     <Card {file} {updateLayoutNextTick} />
   {/each}
