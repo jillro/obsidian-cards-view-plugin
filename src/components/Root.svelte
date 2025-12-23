@@ -1,36 +1,54 @@
 <script lang="ts">
-  import { Menu, SearchComponent, setIcon } from "obsidian";
+  import { Menu, setIcon } from "obsidian";
   import { onMount, tick } from "svelte";
   import MiniMasonry from "minimasonry";
 
   import Card from "./Card.svelte";
   import {
-    tags,
     displayedFiles,
     searchQuery,
-    skipNextTransition,
+    searchCaseSensitive,
+    searchResultLoadingState,
     Sort,
     sort,
-    viewIsVisible,
     settings,
   } from "./store";
 
   let notesGrid: MiniMasonry;
   let cardsContainer: HTMLElement;
+  let cardWidth: number = $state(0);
+
+  async function relayout() {
+    notesGrid.layout();
+    // Get the first card's width, or use the baseWidth setting as fallback
+    const firstCard = cardsContainer?.querySelector(".card") as HTMLElement;
+    if (firstCard) {
+      cardWidth = firstCard.offsetWidth;
+    } else {
+      cardWidth = $settings.minCardWidth;
+    }
+    await tick();
+    notesGrid.layout();
+  }
 
   const sortIcon = (element: HTMLElement) => {
     setIcon(element, "arrow-down-wide-narrow");
   };
 
-  const searchInput = (element: HTMLElement) => {
-    const searchInput = new SearchComponent(element);
-    searchInput.onChange((value) => {
-      $searchQuery = value;
-    });
-    searchQuery.subscribe((value) => {
-      searchInput.inputEl.value = value;
-    });
+  const caseSensitiveIcon = (element: HTMLElement) => {
+    setIcon(element, "case-sensitive");
   };
+
+  const starIcon = (element: HTMLElement) => {
+    setIcon(element, "star");
+  };
+
+  function toggleSavedSearch(search: string) {
+    if (!search) return;
+    $settings.savedSearch = $settings.savedSearch?.includes(search)
+      ? $settings.savedSearch.filter((s) => s !== search)
+      : [...($settings.savedSearch || []), search];
+  }
 
   function sortMenu(event: MouseEvent) {
     const sortMenu = new Menu();
@@ -58,47 +76,52 @@
       gutter: 20,
       surroundingGutter: false,
       ultimateGutter: 20,
+      wedge: true,
     });
-    $skipNextTransition = true;
-    notesGrid.layout();
+    relayout();
 
     return () => {
       notesGrid.destroy();
     };
   });
 
-  let layoutTimeout: NodeJS.Timeout | null = null;
+  let lastLayout: Date = new Date();
+  let pendingLayout: NodeJS.Timeout | null = null;
   const debouncedLayout = () => {
     // If there has been a relayout call in the last 100ms,
-    // we schedule another one in 100ms to avoid layout thrashing
-    // If one is already schedule, we cancel it and schedule a new one
-    if (layoutTimeout) {
-      clearTimeout(layoutTimeout);
-      layoutTimeout = setTimeout(() => {
-        notesGrid.layout();
-        if (layoutTimeout) clearTimeout(layoutTimeout);
-      }, 100);
-      return;
-    }
+    // we schedule another one 100ms later to avoid layout thrashing
+    return new Promise<void>((resolve, reject) => {
+      if (
+        lastLayout.getTime() + 100 > new Date().getTime() &&
+        pendingLayout === null
+      ) {
+        pendingLayout = setTimeout(
+          async () => {
+            await relayout();
+            lastLayout = new Date();
+            pendingLayout = null;
+            resolve();
+          },
+          lastLayout.getTime() + 100 - new Date().getTime(),
+        );
+        return;
+      }
 
-    // Otherwise, relayout immediately
-    notesGrid.layout();
-    layoutTimeout = setTimeout(() => {
-      if (layoutTimeout) clearTimeout(layoutTimeout);
-    }, 100);
+      // Otherwise, relayout immediately
+      relayout()
+        .then(() => {
+          lastLayout = new Date();
+          resolve();
+        })
+        .catch(reject);
+    });
   };
 
-  const updateLayoutNextTick = (transition = false) => {
-    if (!$viewIsVisible) {
-      $skipNextTransition = true;
-      return;
-    } else {
-      $skipNextTransition = !transition;
-    }
-
-    tick().then(debouncedLayout);
-    $skipNextTransition = false;
+  export const updateLayoutNextTick = async () => {
+    await tick();
+    await debouncedLayout();
   };
+  displayedFiles.subscribe(updateLayoutNextTick);
 </script>
 
 <div class="action-bar">
@@ -108,18 +131,77 @@
     onclick={sortMenu}
     aria-label="Sort"
   ></button>
-  <div class="action-bar__search" use:searchInput></div>
+  <div class="action-bar__search">
+    <div class="search-input-container">
+      <input
+        enterkeyhint="search"
+        type="search"
+        spellcheck="false"
+        bind:value={$searchQuery}
+      />
+      <div
+        class="loading-bar"
+        style:--loading={`${(1 - $searchResultLoadingState) * 100}%`}
+      ></div>
+      <div
+        class="search-input-clear-button"
+        onclick={() => ($searchQuery = "")}
+        onkeydown={(e) => {
+          e.stopPropagation();
+          $searchQuery = "";
+        }}
+        role="button"
+        tabindex="0"
+      ></div>
+      <div
+        class="input-right-decorator clickable-icon"
+        class:is-active={$searchCaseSensitive}
+        role="checkbox"
+        aria-label="Case sensitive search"
+        aria-checked={$searchCaseSensitive}
+        use:caseSensitiveIcon
+        onclick={() => ($searchCaseSensitive = !$searchCaseSensitive)}
+        tabindex="0"
+        onkeydown={(e: Event) => {
+          e.stopPropagation();
+          $searchCaseSensitive = !$searchCaseSensitive;
+        }}
+      ></div>
+      {#if $searchQuery}
+        <div
+          class="input-right-decorator clickable-icon"
+          class:is-active={$settings.savedSearch?.includes($searchQuery)}
+          role="checkbox"
+          aria-label="Save search"
+          aria-checked={$settings.savedSearch?.includes($searchQuery)}
+          use:starIcon
+          onclick={() => toggleSavedSearch($searchQuery)}
+          tabindex="0"
+          onkeydown={(e: Event) => {
+            e.stopPropagation();
+            toggleSavedSearch($searchQuery);
+          }}
+          style="transform: translateY(-50%) translateX(-100%)"
+        ></div>
+      {/if}
+    </div>
+  </div>
   <div class="action-bar__tags">
     <div class="action-bar__tags__list">
-      {#each $tags as tag}
-        <button class="action-bar__tag" onclick={() => ($searchQuery = tag)}
-          >{tag}</button
+      {#each $settings.savedSearch || [] as savedSearch}
+        <button
+          class="action-bar__tag"
+          onclick={() => ($searchQuery = savedSearch)}>{savedSearch}</button
         >
       {/each}
     </div>
   </div>
 </div>
-<div class="cards-container" bind:this={cardsContainer}>
+<div
+  class="cards-container"
+  bind:this={cardsContainer}
+  style:--card-width="{cardWidth}px"
+>
   {#each $displayedFiles as file (file.path + file.stat.mtime)}
     <Card {file} {updateLayoutNextTick} />
   {/each}
@@ -202,6 +284,31 @@
       max-width: 300px;
       box-shadow: calc(0px - var(--size-4-5)) 0 var(--size-2-3) var(--size-2-3)
         var(--background-primary);
+    }
+
+    .search-input-container {
+      background-color: var(--background-primary);
+      z-index: 0;
+
+      & .loading-bar {
+        z-index: 1;
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        width: var(--loading);
+        background-color: var(--background-secondary);
+      }
+
+      & div:not(.loading-bar) {
+        z-index: 2;
+      }
+
+      & input {
+        background: transparent;
+        position: relative;
+        z-index: 2;
+      }
     }
   }
 

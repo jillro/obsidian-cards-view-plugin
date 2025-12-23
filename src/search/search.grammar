@@ -1,0 +1,66 @@
+@precedence {
+    Not
+    subExpression
+    or @left
+    SearchOperator @left
+}
+
+@top Program { expression }
+
+expression { And | Or }
+
+And { subExpressionOrNot+ }
+Or { expression !or orOperator expression }
+Not { "-" subExpression }
+subExpressionOrNot { subExpression | Not }
+subExpression { term | "(" expression ")" }
+term { text | searchOperator | PropertyOperator }
+text { Word | Quote | Regex }
+searchOperator {
+    FileOperator |
+    PathOperator |
+    ContentOperator |
+    MatchCaseOperator |
+    IgnoreCaseOperator |
+    TagOperator |
+    LineOperator
+}
+FileOperator { "file:" text }
+PathOperator { "path:" text }
+ContentOperator { "content:" text }
+MatchCaseOperator { "match-case:" text }
+IgnoreCaseOperator { "ignore-case:" text }
+TagOperator { "tag:" Word }
+LineOperator { "line:" subExpression }
+
+PropertyOperator { ("[" PropertyName "]") | ("[" PropertyName ":" PropertyValueExpression "]") }
+PropertyValueExpression { text | PropertyValueOr | "(" PropertyValueExpression ")" }
+PropertyValueOr { PropertyValueExpression !or orOperator PropertyValueExpression }
+
+@tokens {
+    orOperator { "OR" }
+    Quote { '"' (!["\\] | "\\" _)* '"' }
+    Regex { '/' (![/\\] | "\\" _)* '/' }
+    Word { ![\["/ \t\n\r\:\-()] ![ \t\n\r\:\-()\]]+ }
+    PropertyName { ![\[" \t\n\r\:\]]+ }
+    space { $[ \t\n\r]+ }
+    @precedence {
+        orOperator,
+        Quote,
+        Regex,
+        "file:",
+        "path:",
+        "content:",
+        "match-case:",
+        "ignore-case:",
+        "tag:",
+        "line:",
+        "]",
+        ")",
+        Word,
+        space
+    }
+}
+
+@skip { space }
+

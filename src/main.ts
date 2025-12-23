@@ -1,4 +1,9 @@
-import { Plugin, WorkspaceLeaf } from "obsidian";
+import {
+  type CachedMetadata,
+  getAllTags,
+  Plugin,
+  WorkspaceLeaf,
+} from "obsidian";
 
 import {
   type CardsViewSettings,
@@ -12,9 +17,16 @@ export default class CardsViewPlugin extends Plugin {
   settings: CardsViewSettings = Object.assign({}, DEFAULT_SETTINGS);
   async onload() {
     this.settings = Object.assign(this.settings, await this.loadData());
+    if (!this.settings.savedSearch) {
+      this.settings.savedSearch = await this.getTags();
+    }
     store.settings.subscribe(async () => await this.saveSettings());
     store.app.set(this.app);
     store.settings.set(this.settings);
+    store.settings.subscribe(async (settings) => {
+      this.settings = settings;
+      await this.saveSettings();
+    });
     store.appCache.set(this.app.metadataCache);
     this.registerEvent(
       this.app.metadataCache.on("resolved", async () =>
@@ -59,10 +71,31 @@ export default class CardsViewPlugin extends Plugin {
     }
 
     await leaf.setViewState({ type: VIEW_TYPE, active: true });
-    store.viewIsVisible.set(true);
   }
 
   async saveSettings() {
     await this.saveData(this.settings);
+  }
+
+  async getTags() {
+    const tags = this.app.vault
+      .getMarkdownFiles()
+      .map(
+        (file) =>
+          getAllTags(
+            this.app.metadataCache.getFileCache(file) as CachedMetadata,
+          ) || [],
+      )
+      .flat();
+
+    const tagCounts = tags.reduce(
+      (acc, tag) => {
+        acc[tag] = (acc[tag] || 0) + 1;
+        return acc;
+      },
+      {} as Record<string, number>,
+    );
+
+    return Object.keys(tagCounts).sort((a, b) => tagCounts[b] - tagCounts[a]);
   }
 }
