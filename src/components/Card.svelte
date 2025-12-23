@@ -136,8 +136,9 @@
       <button
         class="clickable-icon"
         use:trashIcon
-        on:click|stopPropagation={trashFile}
-      />
+        onclick={trashFile}
+        aria-label="Delete file"
+      ></button>
     {/if}
   </div>
 </div>
