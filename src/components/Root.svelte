@@ -18,8 +18,7 @@
   let cardsContainer: HTMLElement;
   let cardWidth: number = $state(0);
 
-  async function relayout() {
-    notesGrid.layout();
+  async function updateCardWidth() {
     // Get the first card's width, or use the baseWidth setting as fallback
     const firstCard = cardsContainer?.querySelector(".card") as HTMLElement;
     if (firstCard) {
@@ -78,7 +77,8 @@
       ultimateGutter: 20,
       wedge: true,
     });
-    relayout();
+    notesGrid.layout();
+    updateCardWidth();
 
     return () => {
       notesGrid.destroy();
@@ -88,7 +88,7 @@
   let lastLayout: Date = new Date();
   let pendingLayout: NodeJS.Timeout | null = null;
   const debouncedLayout = () => {
-    // If there has been a relayout call in the last 100ms,
+    // If there has been a relayout call in the last 200ms,
     // we schedule another one 100ms later to avoid layout thrashing
     return new Promise<void>((resolve, reject) => {
       if (
@@ -96,8 +96,8 @@
         pendingLayout === null
       ) {
         pendingLayout = setTimeout(
-          async () => {
-            await relayout();
+          () => {
+            notesGrid.layout();
             lastLayout = new Date();
             pendingLayout = null;
             resolve();
@@ -108,12 +108,9 @@
       }
 
       // Otherwise, relayout immediately
-      relayout()
-        .then(() => {
-          lastLayout = new Date();
-          resolve();
-        })
-        .catch(reject);
+      notesGrid.layout();
+      lastLayout = new Date();
+      resolve();
     });
   };
 
