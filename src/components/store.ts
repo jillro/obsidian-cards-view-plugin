@@ -62,10 +62,19 @@ const searchFilter = derived(
     return generateFilter(query);
   },
 );
-const searchResultCache = writable<Map<string, boolean>>(new Map());
-searchFilter.subscribe(() => searchResultCache.set(new Map()));
-const cacheKey = (file: TFile) => file.path + file.stat.mtime;
+
 /**
+ * This cache is used to avoid re-evaluating the search filter for the same file when some files are updated
+ * but the search query has not changed.
+ */
+let searchResultCache: Map<string, boolean> = new Map();
+searchFilter.subscribe(() => (searchResultCache = new Map()));
+const cacheKey = (file: TFile) => file.path + file.stat.mtime;
+
+/**
+ * This is the real data used by display logic to now which files to display
+ *
+ * updateSearchResults() makes the connection between searchResultCache and searchResultsExcluded
  * This is not derived from searchResultCache because we want incremental update
  * and not full invalidation when cache is invalidated
  */
@@ -89,7 +98,7 @@ async function updateSearchResults() {
   let lastBatch = { date: new Date(), index: 0 };
   for (let i = 0; i < $sortedFiles.length; i++) {
     const file = $sortedFiles[i];
-    const cachedResult = get(searchResultCache).get(cacheKey($sortedFiles[i]));
+    const cachedResult = searchResultCache.get(cacheKey($sortedFiles[i]));
     if (cachedResult !== undefined) {
       batch.set(file, cachedResult);
     } else {
@@ -112,7 +121,7 @@ async function updateSearchResults() {
 
       if ($searchQuery !== get(searchQuery)) return;
       batch.set(file, match);
-      searchResultCache.update((cache) => cache.set(cacheKey(file), match));
+      searchResultCache.set(cacheKey(file), match);
     }
 
     if ($searchQuery !== get(searchQuery)) return;
@@ -122,7 +131,7 @@ async function updateSearchResults() {
     }
 
     if (
-      lastBatch.date.getTime() + 200 < new Date().getTime() ||
+      lastBatch.date.getTime() + 500 < new Date().getTime() ||
       i === $sortedFiles.length - 1
     ) {
       searchResultLoadingState.set((i + 1) / $sortedFiles.length);
@@ -160,32 +169,46 @@ searchResultsExcluded.subscribe((excludedFiles) => {
   const $sortedFiles = get(sortedFiles);
   const $lastDisplayed = get(lastDisplayed);
   const beforeCurrentLast = $sortedFiles.slice(0, $lastDisplayed + 1);
-  const filteredBeforeCurrentLast = beforeCurrentLast.filter(
-    (f) => !excludedFiles.has(f),
-  );
+  const targetLength = Math.max(50, get(displayedFiles).length);
+  const matchingBeforeCurrentLast: TFile[] = [];
+  for (
+    let i = 0;
+    matchingBeforeCurrentLast.length < targetLength &&
+    i < beforeCurrentLast.length;
+    i++
+  ) {
+    if (!excludedFiles.has(beforeCurrentLast[i])) {
+      matchingBeforeCurrentLast.push(beforeCurrentLast[i]);
+    }
+  }
 
-  if (filteredBeforeCurrentLast.length > 50) {
-    // We only want to keep same last file if the list is shorter,
-    // if it is longer, we keep same length
-    displayedFiles.set(
-      filteredBeforeCurrentLast.slice(0, get(displayedFiles).length),
-    );
+  if (matchingBeforeCurrentLast.length >= targetLength) {
+    displayedFiles.set(matchingBeforeCurrentLast);
     return;
   }
 
-  // If we have not enough files to reach 50, we add some new ones
-  const filteredAfterCurrentLast = $sortedFiles
-    .slice(
-      $lastDisplayed,
-      Math.floor($sortedFiles.length * get(searchResultLoadingState)) -
-        $lastDisplayed -
-        1,
-    ) // If search results are updating, exclude files which have not been filtered yet
-    .filter((f) => !excludedFiles.has(f));
-  const toAdd = 50 - filteredBeforeCurrentLast.length;
+  // If we have not enough files to reach target length, we add some new ones
+  const toAdd = targetLength - matchingBeforeCurrentLast.length;
+  // If search results are updating, exclude files which have not been filtered yet
+  const afterCurrentLast = $sortedFiles.slice(
+    $lastDisplayed,
+    Math.floor($sortedFiles.length * get(searchResultLoadingState)) -
+      $lastDisplayed -
+      1,
+  );
+  const matchingAfterCurrentLast: TFile[] = [];
+  for (
+    let i = 0;
+    matchingAfterCurrentLast.length < toAdd && i < afterCurrentLast.length;
+    i++
+  ) {
+    if (!excludedFiles.has(afterCurrentLast[i])) {
+      matchingAfterCurrentLast.push(afterCurrentLast[i]);
+    }
+  }
   displayedFiles.set([
-    ...filteredBeforeCurrentLast,
-    ...filteredAfterCurrentLast.slice(0, toAdd),
+    ...matchingBeforeCurrentLast,
+    ...matchingAfterCurrentLast.slice(0, toAdd),
   ]);
 });
 // When the user scrolls, we add more files to the display
