@@ -14,9 +14,17 @@
     settings,
   } from "./store";
 
+  const GUTTER = 20;
+
   let notesGrid: MiniMasonry;
   let cardsContainer: HTMLElement;
   let cardWidth: number = $state(0);
+
+  const maxContentWidth = $derived(
+    $settings.maxColumns > 0
+      ? `${$settings.maxColumns * ($settings.minCardWidth + GUTTER) - GUTTER}px`
+      : "none",
+  );
 
   async function updateCardWidth() {
     // Get the first card's width, or use the baseWidth setting as fallback
@@ -72,9 +80,9 @@
     notesGrid = new MiniMasonry({
       container: cardsContainer,
       baseWidth: $settings.minCardWidth,
-      gutter: 20,
+      gutter: GUTTER,
       surroundingGutter: false,
-      ultimateGutter: 20,
+      ultimateGutter: GUTTER,
       wedge: true,
     });
     notesGrid.layout();
@@ -83,6 +91,18 @@
     return () => {
       notesGrid.destroy();
     };
+  });
+
+  $effect(() => {
+    // touch settings so the effect re-runs when they change
+    const { minCardWidth } = $settings;
+    void maxContentWidth; // re-run when the cap width changes
+    if (!notesGrid) return;
+    // `conf` is not in MiniMasonry's type defs but holds the live config it
+    // reads on each layout(); keep baseWidth in sync with the setting.
+    (notesGrid as unknown as { conf: { baseWidth: number } }).conf.baseWidth =
+      minCardWidth;
+    tick().then(() => notesGrid.layout());
   });
 
   let lastLayout: Date = new Date();
@@ -198,6 +218,7 @@
   class="cards-container"
   bind:this={cardsContainer}
   style:--card-width="{cardWidth}px"
+  style:max-width={maxContentWidth}
 >
   {#each $displayedFiles as file (file.path + file.stat.mtime)}
     <Card {file} {updateLayoutNextTick} />
@@ -312,6 +333,7 @@
   .cards-container {
     position: relative;
     container-type: inline-size;
+    margin-inline: auto;
   }
 
   .cards-container :global(*) {
