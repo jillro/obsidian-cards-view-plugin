@@ -11,6 +11,7 @@ export enum TitleDisplayMode {
 export interface CardsViewSettings {
   baseQuery: string;
   minCardWidth: number;
+  maxColumns: number;
   launchOnStart: boolean;
   showDeleteButton: boolean;
   displayTitle: TitleDisplayMode;
@@ -21,6 +22,7 @@ export interface CardsViewSettings {
 export const DEFAULT_SETTINGS: CardsViewSettings = {
   baseQuery: "",
   minCardWidth: 200,
+  maxColumns: 0,
   launchOnStart: false,
   showDeleteButton: true,
   displayTitle: TitleDisplayMode.Both,
@@ -72,6 +74,26 @@ export class CardsViewSettingsTab extends PluginSettingTab {
             settings.update((s) => ({
               ...s,
               minCardWidth: parseInt(value),
+            }));
+          }),
+      );
+
+    new Setting(containerEl)
+      .setName("Maximum columns")
+      .setDesc("Limit the number of columns. Set to 0 for no limit.")
+      .addText((text) =>
+        text
+          .setPlaceholder("0")
+          .setValue(this.plugin.settings.maxColumns.toString())
+          .onChange((value) => {
+            if (isNaN(parseInt(value))) {
+              new Notice("Invalid number");
+              return;
+            }
+
+            settings.update((s) => ({
+              ...s,
+              maxColumns: parseInt(value),
             }));
           }),
       );
