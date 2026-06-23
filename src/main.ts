@@ -34,6 +34,18 @@ export default class CardsViewPlugin extends Plugin {
       ),
     );
 
+    // Initialize and update folders
+    store.folders.set(this.getFolders());
+    this.registerEvent(
+      this.app.vault.on("create", () => store.folders.set(this.getFolders())),
+    );
+    this.registerEvent(
+      this.app.vault.on("delete", () => store.folders.set(this.getFolders())),
+    );
+    this.registerEvent(
+      this.app.vault.on("rename", () => store.folders.set(this.getFolders())),
+    );
+
     this.addSettingTab(new CardsViewSettingsTab(this.app, this));
     this.addRibbonIcon("align-start-horizontal", "Card view", () => {
       this.activateView();
@@ -97,5 +109,15 @@ export default class CardsViewPlugin extends Plugin {
     );
 
     return Object.keys(tagCounts).sort((a, b) => tagCounts[b] - tagCounts[a]);
+  }
+
+  getFolders() {
+    const allFolders = this.app.vault.getAllFolders();
+    // Get unique folder paths and sort them
+    const folderPaths = allFolders
+      .map((folder) => folder.path)
+      .filter((path) => path !== "") // Exclude root folder
+      .sort();
+    return folderPaths;
   }
 }

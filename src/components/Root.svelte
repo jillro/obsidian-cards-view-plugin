@@ -12,6 +12,7 @@
     Sort,
     sort,
     settings,
+    folders,
   } from "./store";
 
   const GUTTER = 20;
@@ -205,10 +206,11 @@
   </div>
   <div class="action-bar__tags">
     <div class="action-bar__tags__list">
-      {#each $settings.savedSearch || [] as savedSearch}
+      {#each $folders as folder}
         <button
           class="action-bar__tag"
-          onclick={() => ($searchQuery = savedSearch)}>{savedSearch}</button
+          onclick={() => ($searchQuery = `path:"${folder}/"`)}
+          >{folder}</button
         >
       {/each}
     </div>

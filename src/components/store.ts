@@ -23,6 +23,7 @@ export const app = writable<App>();
 export const view = writable<ItemView>();
 export const appCache = writable<MetadataCache>();
 export const files = writable<TFile[]>([]);
+export const folders = writable<string[]>([]);
 
 /**
  * Stores for user input (updated mainly from settings.ts, view.ts, Root.svelte)
@@ -81,6 +82,9 @@ const cacheKey = (file: TFile) => file.path + file.stat.mtime;
 const searchResultsExcluded = writable<Set<TFile>>(new Set());
 export const searchResultLoadingState = writable(1);
 
+// Track the current filter to properly cancel outdated searches
+let currentFilterId = 0;
+
 async function updateSearchResults() {
   const $sortedFiles = get(sortedFiles);
   const $searchQuery = get(searchQuery);
@@ -88,6 +92,10 @@ async function updateSearchResults() {
   const $appCache = get(appCache);
   const $app = get(app);
   const $searchCaseSensitive = get(searchCaseSensitive);
+
+  // Increment filter ID to cancel previous searches
+  const thisFilterId = ++currentFilterId;
+
   if ($searchFilter === null) {
     searchResultsExcluded.set(new Set());
     searchResultLoadingState.set(1);
@@ -119,12 +127,14 @@ async function updateSearchResults() {
         caseSensitive: $searchCaseSensitive,
       });
 
-      if ($searchQuery !== get(searchQuery)) return;
+      // Check if this search has been superseded
+      if (thisFilterId !== currentFilterId) return;
       batch.set(file, match);
       searchResultCache.set(cacheKey(file), match);
     }
 
-    if ($searchQuery !== get(searchQuery)) return;
+    // Check if this search has been superseded
+    if (thisFilterId !== currentFilterId) return;
 
     if (i % 10 === 0) {
       searchResultLoadingState.set(i / $sortedFiles.length);
@@ -230,6 +240,7 @@ sortedFiles.subscribe(($sortedFiles) => {
 
 export default {
   files,
+  folders,
   sort,
   searchQuery,
   searchCaseSensitive,
